@@ -7,6 +7,7 @@ int main(int argc,char** argv)
   // ------ Init ROS ------
   ros::init(argc,&*argv,"test_filters");
   ros::NodeHandle nh;
+
   srand((unsigned int) time(0));
 
   double natural_frequency = 500; // [rad/s]
@@ -17,7 +18,6 @@ int main(int argc,char** argv)
   unsigned int order = lpf.getOrder();
   unsigned int nin   = lpf.getNumberOfInputs();
   unsigned int nout  = lpf.getNumberOfOutputs();
-
 
   double u=0;
   double y=0;
@@ -33,6 +33,5 @@ int main(int argc,char** argv)
     ROS_INFO_STREAM("output:"<<y << ", input:"<<u);
 
   }
-  
   return 0; 
 }

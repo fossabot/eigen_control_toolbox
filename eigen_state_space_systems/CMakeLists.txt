@@ -1,19 +1,20 @@
 cmake_minimum_required(VERSION 3.1)
 project(eigen_state_space_systems)
 
-set(CMAKE_CXX_STANDARD 14)
+if(NOT CMAKE_BUILD_TYPE)
+set(CMAKE_BUILD_TYPE Release)
+endif()
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-find_package(catkin REQUIRED COMPONENTS
-  roscpp cmake_modules eigen_matrix_utils
-)
+find_package(catkin REQUIRED COMPONENTS eigen_matrix_utils)
 find_package(Eigen3 REQUIRED COMPONENTS Core Dense)
 
 catkin_package(
   INCLUDE_DIRS include
 #   LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS roscpp eigen_matrix_utils
+  CATKIN_DEPENDS eigen_matrix_utils
   DEPENDS 
 )
 
@@ -22,20 +23,6 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
 )
-
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/eigen_state_space_systems.cpp
-#   src/${PROJECT_NAME}/eigen_controllers.cpp
-#   src/${PROJECT_NAME}/eigen_iir_filters.cpp
-#   src/${PROJECT_NAME}/eigen_fir_filters.cpp
-#   src/${PROJECT_NAME}/eigen_sg_filter.cpp
-# )
-# add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(${PROJECT_NAME}
-#                       ${catkin_LIBRARIES}
-#                       ${Eigen_LIBRARIES}
-# )
-
 
 add_executable(test_state_space_matrix src/test_state_space_matrix.cpp)
 add_dependencies(test_state_space_matrix ${catkin_EXPORTED_TARGETS})

@@ -8,10 +8,10 @@ int main(int argc,char** argv)
   ros::init(argc,&*argv,"test_matrix");
   ros::NodeHandle nh;
   srand((unsigned int) time(0));
-
-  unsigned int order=10; // system order
-  unsigned int nin=1;    // number of inputs
-  unsigned int nout=1;   // number of outputs
+  
+  const unsigned int order=10; // system order
+  const unsigned int nin=1;    // number of inputs
+  const unsigned int nout=1;   // number of outputs
   
   Eigen::MatrixXd A(order,order);
   Eigen::MatrixXd B(order,nin);
@@ -23,10 +23,8 @@ int main(int argc,char** argv)
   C.setRandom();
   D.setRandom();
   
- 
-  eigen_control_toolbox::DiscreteStateSpace ss(A,B,C,D);
+  eigen_control_toolbox::DiscreteStateSpace<order,nin,nout> ss(A,B,C,D);
 
-  
   Eigen::VectorXd u(nin);   //input vector
   Eigen::VectorXd y(nout);  //output vector
   
@@ -39,8 +37,8 @@ int main(int argc,char** argv)
   
   y=ss.update(u); // computing one step, updating state and output
   
-  eigen_control_toolbox::DiscreteStateSpace ss2;
-  if (!ss2.importMatricesFromParam(nh,"ss"))
+  eigen_control_toolbox::DiscreteStateSpaceX ss2;
+  if(!ss2.importMatricesFromParam(nh,"ss"))
   {
     ROS_ERROR("error");
     return -1;

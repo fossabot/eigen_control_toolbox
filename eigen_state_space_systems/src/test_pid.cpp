@@ -9,7 +9,7 @@ int main(int argc,char** argv)
   ros::NodeHandle nh;
   srand((unsigned int) time(0));
 
-  eigen_control_toolbox::Controller proportional;
+  eigen_control_toolbox::Controller<-1,-1,-1> proportional;
   if (!proportional.importMatricesFromParam(nh,"ctrl1"))
   {
     ROS_ERROR("Failing initializing controller ctrl1");
@@ -18,7 +18,7 @@ int main(int argc,char** argv)
   ROS_INFO("ctrl1:");
   proportional.print();
 
-  eigen_control_toolbox::Controller pi;
+  eigen_control_toolbox::Controller<-1,-1,-1> pi;
   if (!pi.importMatricesFromParam(nh,"ctrl2"))
   {
     ROS_ERROR("Failing initializing controller ctrl1");
@@ -43,7 +43,6 @@ int main(int argc,char** argv)
     pi.antiwindup(pi_sat,pi_output);
     ROS_INFO("controller_input=%f, PI output=%f, PI saturated output=%f",controller_input,pi_output,pi_sat);
    }
-
 
   return 0;
 }

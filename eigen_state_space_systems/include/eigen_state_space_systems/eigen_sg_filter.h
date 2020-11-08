@@ -6,7 +6,8 @@
 namespace eigen_control_toolbox
 {
   
-  class SavitkyGolay: public FirFilter
+  template<int DIM, int MaxDIM>
+  class SavitkyGolay: public FirFilter<DIM,MaxDIM>
   {
   protected:
     void computeCoeffs(const unsigned int& polynomial_order,
@@ -28,6 +29,7 @@ namespace eigen_control_toolbox
     );
     
   public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     SavitkyGolay(){};
     SavitkyGolay( const double& natural_frequency,
                         const double& sample_period,
@@ -42,9 +44,12 @@ namespace eigen_control_toolbox
     
   };
   
-  class CausalSavitkyGolay: public FirFilter
+  
+  template<int DIM, int MaxDIM>
+  class CausalSavitkyGolay: public FirFilter<DIM,MaxDIM>
   {
   protected:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     void computeCoeffs(const unsigned int& polynomial_order,
                        const unsigned int& window,
                        const unsigned int& output_size);
@@ -79,5 +84,6 @@ namespace eigen_control_toolbox
   };
   
 }
-#include <eigen_state_space_systems/eigen_sg_filter_impl.h>
+
+#include <eigen_state_space_systems/internal/eigen_sg_filter_impl.h>
 #endif
