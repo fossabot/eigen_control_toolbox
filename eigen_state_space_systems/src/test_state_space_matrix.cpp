@@ -23,7 +23,7 @@ int main(int argc,char** argv)
   C.setRandom();
   D.setRandom();
   
-  eigen_control_toolbox::DiscreteStateSpace<order,nin,nout> ss(A,B,C,D);
+  eigen_control_toolbox::DiscreteStateSpace<order,-1,-1> ss(A,B,C,D);
 
   Eigen::VectorXd u(nin);   //input vector
   Eigen::VectorXd y(nout);  //output vector

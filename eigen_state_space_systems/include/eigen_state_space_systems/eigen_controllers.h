@@ -40,12 +40,10 @@ public:
                             std::string&           error);
 
   virtual void setAntiWindupMatrix(const MatrixBaw& D);
-  
   virtual bool importMatricesFromParam(const ros::NodeHandle& nh, const std::string& controller_name);
 
   virtual double update(const double& input);
-  void antiwindup(const Output& saturated_output,
-                  const Output& unsaturated_output);
+  void antiwindup(const Output& saturated_output, const Output& unsaturated_output);
   void antiwindup(const double& saturated_output, const double& unsaturated_output);
 
   void setPI(const double& Kp, const double& Ki, const double& sampling_period);
