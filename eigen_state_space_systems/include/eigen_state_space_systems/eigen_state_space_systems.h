@@ -5,12 +5,35 @@
 #include <Eigen/Core>
 #include <ros/node_handle.h>
 #include <eigen_matrix_utils/eigen_matrix_utils.h>
-  
 
+/*!
+ *  \addtogroup eigen_control_toolbox
+ *  @{
+ */
+
+//! @brief The implementation of all the classes and functions for the management of a Discreate Space System
 namespace eigen_control_toolbox
 {
 
-
+/** 
+ * @brief The function extract the Matrices descring the Discrete Space System. 
+ * The Discrete Space System describe the mathematical equations
+ * 
+ * X(k) = A * X(k-1) + B*u(k);
+ * Y(k) = C * X(k-1) + D*u(k);
+ * 
+ * where 'X', 'y', and 'u' are the state, the output and the input respectively
+ * 
+ * NOTE: the function will be moved to an "utility" library, in order to remove the 
+ *       ROS dependency to the lib 
+ * @param[in] nh Node Handle 
+ * @param[in] name name of the namespace for the 
+ * @param[out]  A Matrix A
+ * @param[out]  B Matrix B
+ * @param[out]  C Matrix C
+ * @param[out]  D Matrix D
+ * @return bool false if the params are not found in the param server, true otherwise
+ * */
 bool importMatricesFromParam( const ros::NodeHandle&  nh, 
                               const std::string&      name,
                               Eigen::MatrixXd&        A,
@@ -19,11 +42,11 @@ bool importMatricesFromParam( const ros::NodeHandle&  nh,
                               Eigen::MatrixXd&        D,
                               std::string&            what);
 
-/**
- * 
- * 
- * 
- * 
+/** 
+ * @brief The BaseDiscreteStateSpace is the base class for future extension of the library
+ * At this moment, only one class is inherited from the BaseDiscreteStateSpace
+ * The class implements the basic operations, without caring about the mathematical 
+ * dimension and description of the State, Inputs and Outputs 
  */
 class BaseDiscreteStateSpace : std::enable_shared_from_this<BaseDiscreteStateSpace>
 {
@@ -44,76 +67,57 @@ public:
   BaseDiscreteStateSpace(const Eigen::MatrixXd& A, 
                          const Eigen::MatrixXd& B, 
                          const Eigen::MatrixXd& C, 
-                         const Eigen::MatrixXd& D)
-  {
-  }
+                         const Eigen::MatrixXd& D) = default;
   virtual ~BaseDiscreteStateSpace() = default;
 
+  /**
+   * The function is deprecated, in the future, the ROS dependecy from the library will be removed.
+   */
+  [[deprecated("Use the Ctor, or call the function standalone, and pass the output to the Ctor")]]
   bool importMatricesFromParam( const ros::NodeHandle&  nh, 
-                                const std::string&      name)
-  {
-    Eigen::MatrixXd A,B,C,D;
-    std::string what;
-    if(!eigen_control_toolbox::importMatricesFromParam(nh, name, A,B,C,D,what))
-    {
-      std::cerr << __PRETTY_FUNCTION__ <<":"<<__LINE__<<":" << what << std::endl;
-      return false;
-    }
+                                const std::string&      name);
 
-    if(!this->setMatrices(A,B,C,D,what))
-    {
-      std::cerr << __PRETTY_FUNCTION__ <<":"<<__LINE__<<":" << what << std::endl;
-      return false;
-    }
-    return true;
-  }
-
+  //! The function may change with respect to the actual representation of the problem
   virtual bool setMatrices( const Eigen::MatrixXd& A, 
                             const Eigen::MatrixXd& B, 
                             const Eigen::MatrixXd& C, 
                             const Eigen::MatrixXd& D,
                             std::string&           error) = 0;
 
-  void setSamplingPeriod(const double& sampling_period)
-  {
-    m_sampling_period=sampling_period;
-  }
-  double getSamplingPeriod() const 
-  {
-    return m_sampling_period;
-  }
+  //! Set the sampling period of the dicrete system 
+  void setSamplingPeriod(const double& sampling_period);
+
+  //! Get the sampling period of the dicrete system
+  double getSamplingPeriod() const;
 };
 
+//! Shared Ptr definition
 typedef BaseDiscreteStateSpace::Ptr BaseDiscreteStateSpacePtr;
+
+//! Shared Ptr definition
 typedef BaseDiscreteStateSpace::ConstPtr BaseDiscreteStateSpaceConstPtr;
 
 /**
- * 
- * 
+ * @brief the function is designed for future extension, if different implementation will be inherited
  */
-inline 
-bool createDiscreteStateSpace(const ros::NodeHandle&  nh, const std::string& name, BaseDiscreteStateSpacePtr dss)
-{
-  Eigen::MatrixXd A,B,C,D;
-  std::string error;
-  if(!importMatricesFromParam(nh, name, A,B,C,D, error))
-  {
-    std::cerr << __PRETTY_FUNCTION__ << ":" <<__LINE__ <<": " << error << std::endl;
-    return false;
-  }
-  if(!(dss->setMatrices(A,B,C,D,error)))
-  {
-    std::cerr << __PRETTY_FUNCTION__ << ":" <<__LINE__ <<": " << error << std::endl;
-    return false;
-  }
-  return true;
-}
+bool createDiscreteStateSpace(const ros::NodeHandle&  nh, const std::string& name, BaseDiscreteStateSpacePtr dss);
 
 
-/*
-  m_output = m_C*m_state + m_D*input;
-  m_state  = m_A*m_state + m_B*input;
-  */
+/** << NOTE
+ * @brief The function extract the Matrices descring the Discrete Space System. 
+ * The Discrete Space System describe the mathematical equations
+ * 
+ * X(k) = A * X(k-1) + B*u(k);
+ * Y(k) = C * X(k-1) + D*u(k);
+ * 
+ * where 'X', 'y', and 'u' are the state, the output and the input respectively
+ * \tparam S State Dimension
+ * \tparam I Input Dimension
+ * \tparam O Output Dimension
+ * \tparam MaxS = S if specified, it pre-allocates the max usable memory in the stack 
+ * \tparam MaxI = I if specified, it pre-allocates the max usable memory in the stack 
+ * \tparam MaxO = O if specified, it pre-allocates the max usable memory in the stack 
+ */
 template< int S,          // State Dimension
           int I,          // Input Dimension  
           int O,          // Output Dimension
@@ -123,7 +127,7 @@ template< int S,          // State Dimension
 class DiscreteStateSpace : public BaseDiscreteStateSpace
 {
 private:
-  // some useful constant at compile time are introduced, in o
+  // some useful constant at compile time are introduced
   enum { IW    = (I > 0 && S > 0 ? I*S : Eigen::Dynamic),               // dimension of the input window
          OW    = (O > 0 && S > 0 ? O*S : Eigen::Dynamic),               // dimension of the output window
          MaxIW = (MaxI>0 && MaxS>0 ? MaxI>0 && MaxS>0 : Eigen::Dynamic),
@@ -148,26 +152,47 @@ private:
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
+  //! State: dimension S, if S==1, then the State type is a double
   using State = typename std::conditional<S==1, 
                     double, Eigen::Matrix<double,S,1,S_RC,S_MAX>>::type;
+
+  //! Input: dimension I, if I==1, then the Input type is a double
   using Input   = typename std::conditional<I==1, 
                     double, Eigen::Matrix<double,I,1,I_RC,I_MAX>>::type;
+
+  //! Output: dimension O, if O==1, then the Output type is a double
   using Output  = typename std::conditional<O==1, 
                     double, Eigen::Matrix<double,O,1,O_RC,O_MAX,1>>::type;
+
+  //! A: dimension S x S, if S==1, then the matrix A type is a double
   using MatrixA = typename std::conditional<S==1, 
                     double, Eigen::Matrix<double,S,S,A_RC,S_MAX,S_MAX>>::type;
+
+  //! B: dimension S x I, if S==1 and I==1, then the matrix B type is a double
   using MatrixB = typename std::conditional<S==1 && I==1, 
                     double, Eigen::Matrix<double,S,I,B_RC,S_MAX,I_MAX>>::type;
+
+  //! C: dimension O x S, if O==1 and S==1, then the matrix C type is a double
   using MatrixC = typename std::conditional<O==1 && S==1, 
                     double, Eigen::Matrix<double,O,S,C_RC,O_MAX,S_MAX>>::type;
+
+  //! D: dimension O x I, if O==1 and I==1, then the matrix D type is a double
   using MatrixD = typename std::conditional<O==1 && I==1,
                     double, Eigen::Matrix<double,O,I,D_RC,O_MAX, I_MAX>>::type;
+
+  //! Past Inputs: dimension (IxS) x I, if I==1 and S==1, then it reduces to a double
   using InputWindow = typename std::conditional<IW==1, 
                     double, Eigen::Matrix<double,IW,1,IW_RC,IW_MAX>>::type;
+
+  //! Past Outputs: dimension (OxS) x I, if I==1 and S==1, then it reduces to a double
   using OutputWindow = typename std::conditional<OW==1, 
                     double, Eigen::Matrix<double,OW,1,OW_RC,OW_MAX>>::type;
+
+  //! Obesrvation Matrix: dimension (OxS) x I, if O==1, I==1 and S==1, then it reduces to a double
   using MatrixObs = typename std::conditional<OW==1 && S==1, 
                     double, Eigen::Matrix<double,OW,S,OBS_RC,OW_MAX, S_MAX>>::type;
+
+  //! Output to Input Matrix: dimension (OxS) x (IxS), if O==1, I==1 and S==1, then it reduces to a double
   using MatrixI2O = typename std::conditional<OW==1 && IW==1, 
                     double, Eigen::Matrix<double,OW,IW,I2O_RC,OW_MAX, IW_MAX>>::type;
 
@@ -178,61 +203,91 @@ public:
   DiscreteStateSpace(DiscreteStateSpace&&) = delete;
   DiscreteStateSpace& operator=(DiscreteStateSpace&&) = delete;
 
+  /**
+   *  @brief The constructor get dynamic allocated matrixes as input
+   *  In the case the template is dynamic (e.g., S==-1, or I==-1, or O==-1)
+   *  the dimension of the matrix will define the dimension of the system
+   *  
+   *  In the case the template is static, the dimension of the matricies is checked 
+   */
   DiscreteStateSpace( const Eigen::MatrixXd& A, 
                       const Eigen::MatrixXd& B, 
                       const Eigen::MatrixXd& C, 
-                      const Eigen::MatrixXd& D) 
-    : BaseDiscreteStateSpace(A,B,C,D) 
-  {
-    std::string error;
-    if(!this->setMatrices(A,B,C,D,error))
-    {
-      throw std::invalid_argument(("Error in memory management: "+error).c_str());
-    }
-  }
+                      const Eigen::MatrixXd& D);
 
+  /**
+   *  @brief The constructor get dynamic allocated matrixes as input
+   *  In the case the template is dynamic (e.g., S==-1, or I==-1, or O==-1)
+   *  the dimension of the matrix will define the dimension of the system
+   *  
+   *  In the case the template is static, the dimension of the matricies is checked 
+   */
   virtual bool setMatrices(const Eigen::MatrixXd& A, 
                            const Eigen::MatrixXd& B, 
                            const Eigen::MatrixXd& C, 
                            const Eigen::MatrixXd& D,
                            std::string&           error);
    
+  //! accessor
   const MatrixA& getAMatrix() const {return m_A;};
+
+  //! accessor
   const MatrixB& getBMatrix() const {return m_B;};
+
+  //! accessor
   const MatrixC& getCMatrix() const {return m_C;};
+
+  //! accessor
   const MatrixD& getDMatrix() const {return m_D;};
+
+  //! accessor to last comupted output
   const Output&  getOutput()  const {return m_output;};
+
+  //! accessor to the internal state
   const State&   getState()   const {return m_state;};
+
+  //! accessor to the order (state dimension)
   int   getOrder()            const {return eigen_utils::rows(m_state);};
+
+  //! accessor to the input dimension
   int   getNumberOfInputs()   const {return eigen_utils::rows(m_input);};
+
+  //! accessor to the output dimension
   int   getNumberOfOutputs()  const {return eigen_utils::rows(m_output);};
   
+  /**
+   * @brief set the state. The dimension is checked
+   * NOTE: the input can be a 'double' or a Eigen::Matrix according to the template definition
+   * If the State dimension is 1, the tyep 'State' refers to a double
+   */
   void  setState(const State& state);
   
+  //! print the matricies of the system
   void print();
   
-  /*
-    * 
-    * void setStateFromIO(const Eigen::Ref<Eigen::Matrix<double, N,1>> past_inputs,
-    *                     const Eigen::Ref<Eigen::Matrix<double, N,1>> past_outputs);
-    * 
-    * Compute state from past inputs and outputs during a time window large as the state
-    */
+  /**
+   * @brief Compute state from past inputs and outputs during a time window large as the state
+   */
   virtual void setStateFromIO(const InputWindow& past_inputs, const OutputWindow& past_outputs);
   
-  /*
-    * 
-    * void setStateFromLastIO( const Input& inputs,
-    *                          const Output& outputs);
-    * 
-    * Compute state from input and the output
-    */
+  /**
+   * @brief Compute state from input and the output
+   */
   void setStateFromLastIO(const Input& inputs, const Output& outputs);
   
+  /**
+   * @brief update the system, to be called at each sampling iteration
+   * @param input The type of the input is an Eigen::Matrix<double,I,1> if I is different from 1
+   *              while is a 'doube' if I is equal to 1
+   * @return output The type of the input is an Eigen::Matrix<double,I,1> if I is different from 1
+   *              while is a 'doube' if I is equal to 1
+   */
   virtual Output& update(const Input& input);
   
+  //! @brief compute the observability matrix
   const MatrixObs& computeObservatibilityMatrix( );
   
+  //! @brief compute the input to output matrix
   const MatrixI2O& computeInputToOutputMatrix( );
 
 
@@ -256,8 +311,9 @@ using DiscreteStateSpacePtr = std::shared_ptr<DiscreteStateSpace<S,I,O,MS,MI,MO>
 
 typedef DiscreteStateSpace<-1,-1,-1> DiscreteStateSpaceX;
 
-
 }
+
+/*! @} End of Doxygen Groups*/
 
 
 #include <eigen_state_space_systems/internal/eigen_state_space_systems_impl.h>

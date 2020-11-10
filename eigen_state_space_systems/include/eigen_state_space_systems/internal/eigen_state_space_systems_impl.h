@@ -7,7 +7,7 @@
 
 namespace eigen_utils
 {
-  bool resize(const double& m, int rows, int cols)
+  inline bool resize(const double& m, int rows, int cols)
   {
     return rows==1 && cols ==1;
   }
@@ -19,7 +19,7 @@ namespace eigen_utils
           std::enable_if_t< (Eigen::MatrixBase<Derived>::RowsAtCompileTime == Eigen::Dynamic) 
                           ||(Eigen::MatrixBase<Derived>::ColsAtCompileTime == Eigen::Dynamic) 
                           , int> = 0> 
-  bool checkInputDim(const std::string& id, const Eigen::MatrixBase<Derived>& m, int rows, int cols, std::string& error)
+  inline bool checkInputDim(const std::string& id, const Eigen::MatrixBase<Derived>& m, int rows, int cols, std::string& error)
   {
     if((m.rows() !=  rows)||(m.cols()!= cols))
     {
@@ -39,19 +39,19 @@ namespace eigen_utils
           std::enable_if_t< (Eigen::MatrixBase<Derived>::RowsAtCompileTime != Eigen::Dynamic) 
                           && (Eigen::MatrixBase<Derived>::ColsAtCompileTime != Eigen::Dynamic) 
                           , int> = 0> 
-  bool checkInputDim(const std::string& id, const Eigen::MatrixBase<Derived>& m, int rows, int cols, std::string& error)
+  inline bool checkInputDim(const std::string& id, const Eigen::MatrixBase<Derived>& m, int rows, int cols, std::string& error)
   {
     return Eigen::MatrixBase<Derived>::RowsAtCompileTime == rows 
         && Eigen::MatrixBase<Derived>::ColsAtCompileTime == cols;
   }
 
-  bool checkInputDim(const std::string& id, const double& m, int rows, int cols, std::string& error)
+  inline bool checkInputDim(const std::string& id, const double& m, int rows, int cols, std::string& error)
   {
     return rows == 1 && cols == 1;
   }
 
   template<typename Derived>
-  void checkInputDimAndThrowEx(const std::string& id, const Eigen::MatrixBase<Derived>& m, int rows, int cols)
+  inline void checkInputDimAndThrowEx(const std::string& id, const Eigen::MatrixBase<Derived>& m, int rows, int cols)
   {
     std::string error;
     if(!eigen_utils::checkInputDim(id,m,rows,cols,error))
@@ -60,7 +60,7 @@ namespace eigen_utils
     }
   }
 
-  void checkInputDimAndThrowEx(const std::string& id, const double& m, int rows, int cols)
+  inline void checkInputDimAndThrowEx(const std::string& id, const double& m, int rows, int cols)
   {
     if(rows !=1 && cols !=1)
     {
@@ -69,7 +69,7 @@ namespace eigen_utils
   }
 
   // double, double
-  bool copy(double& lhs, const double& rhs)
+  inline bool copy(double& lhs, const double& rhs)
   {
     lhs = rhs;
     return true;
@@ -77,7 +77,7 @@ namespace eigen_utils
 
   // double, matrix
   template<typename Derived> 
-  bool copy(double& lhs, const Eigen::MatrixBase<Derived>& rhs)
+  inline bool copy(double& lhs, const Eigen::MatrixBase<Derived>& rhs)
   {
     if(rhs.rows()!=1 || rhs.cols()!=1)
     {
@@ -89,7 +89,7 @@ namespace eigen_utils
 
   // matrix, matrix
   template<typename Derived, typename OtherDerived>
-  bool copy(Eigen::MatrixBase<Derived> & lhs, 
+  inline bool copy(Eigen::MatrixBase<Derived> & lhs, 
             const Eigen::MatrixBase<OtherDerived>& rhs)
   {
     if(!eigen_utils::resize(lhs, rhs.rows(),  rhs.cols()))
@@ -99,7 +99,7 @@ namespace eigen_utils
 
   // matrix, double
   template<typename Derived> 
-  bool copy(Eigen::MatrixBase<Derived>& lhs, const double& rhs)
+  inline bool copy(Eigen::MatrixBase<Derived>& lhs, const double& rhs)
   {
     lhs.setConstant(rhs);
     return true;
@@ -111,7 +111,7 @@ namespace eigen_utils
   //     rhs = (OxS) x 1
   //     m   = (OxS) x S
   template<typename Derived, typename InputDerived, typename OutputDerived>
-  bool svd( const Eigen::MatrixBase<Derived>& m, // OW x S
+  inline bool svd( const Eigen::MatrixBase<Derived>& m, // OW x S
             const Eigen::MatrixBase<InputDerived>& rhs,
             Eigen::MatrixBase<OutputDerived>& x)
   {
@@ -124,7 +124,7 @@ namespace eigen_utils
     return true;
   }
 
-  bool svd( const double& m, 
+  inline bool svd( const double& m, 
             const double& rhs,
             double&       x)
   {
@@ -132,7 +132,6 @@ namespace eigen_utils
     return true;
   }
 }  // namesapce eigen_utils
-
 
 /**
  * 
@@ -143,6 +142,44 @@ namespace eigen_utils
  */
 namespace eigen_control_toolbox 
 {
+
+
+/**
+ * The function is deprecated, in the future, the ROS dependecy from the library will be removed.
+ */
+inline 
+bool BaseDiscreteStateSpace::importMatricesFromParam( const ros::NodeHandle&  nh, 
+                              const std::string&      name)
+{
+  Eigen::MatrixXd A,B,C,D;
+  std::string what;
+  if(!eigen_control_toolbox::importMatricesFromParam(nh, name, A,B,C,D,what))
+  {
+    std::cerr << __PRETTY_FUNCTION__ <<":"<<__LINE__<<":" << what << std::endl;
+    return false;
+  }
+
+  if(!this->setMatrices(A,B,C,D,what))
+  {
+    std::cerr << __PRETTY_FUNCTION__ <<":"<<__LINE__<<":" << what << std::endl;
+    return false;
+  }
+  return true;
+}
+
+inline 
+void BaseDiscreteStateSpace::setSamplingPeriod(const double& sampling_period)
+{
+  m_sampling_period=sampling_period;
+}
+
+inline 
+double BaseDiscreteStateSpace::getSamplingPeriod() const 
+{
+  return m_sampling_period;
+}
+
+
 
 inline bool importMatricesFromParam(const ros::NodeHandle&  nh, 
                                     const std::string&      name,
@@ -204,12 +241,46 @@ inline bool importMatricesFromParam(const ros::NodeHandle&  nh,
 }
 
 
+inline 
+bool createDiscreteStateSpace(const ros::NodeHandle&  nh, const std::string& name, BaseDiscreteStateSpacePtr dss)
+{
+  Eigen::MatrixXd A,B,C,D;
+  std::string error;
+  if(!importMatricesFromParam(nh, name, A,B,C,D, error))
+  {
+    std::cerr << __PRETTY_FUNCTION__ << ":" <<__LINE__ <<": " << error << std::endl;
+    return false;
+  }
+  if(!(dss->setMatrices(A,B,C,D,error)))
+  {
+    std::cerr << __PRETTY_FUNCTION__ << ":" <<__LINE__ <<": " << error << std::endl;
+    return false;
+  }
+  return true;
+}
+
 /**
  * 
  * 
  * 
  * 
  */
+template< int S, int I, int O, int MS, int MI, int MO > 
+inline DiscreteStateSpace<S,I,O,MS,MI,MO>::DiscreteStateSpace( 
+      const Eigen::MatrixXd& A, 
+      const Eigen::MatrixXd& B, 
+      const Eigen::MatrixXd& C, 
+      const Eigen::MatrixXd& D) 
+  : BaseDiscreteStateSpace(A,B,C,D) 
+{
+  std::string error;
+  if(!this->setMatrices(A,B,C,D,error))
+  {
+    throw std::invalid_argument(("Error in memory management: "+error).c_str());
+  }
+}
+
+
 template< int S, int I, int O, int MS, int MI, int MO > 
 inline bool DiscreteStateSpace<S,I,O,MS,MI,MO>::setMatrices(
   const Eigen::MatrixXd& A,
@@ -363,7 +434,7 @@ inline const typename DiscreteStateSpace<S,I,O,MS,MI,MO>::MatrixObs&
   eigen_utils::resize(pow_a, getOrder(), getOrder());
   eigen_utils::setIdentity(pow_a);
   
-  for (unsigned int idx=0;idx<  getOrder();idx++)
+  for (unsigned int idx=0;idx<getOrder();idx++)
   {
     eigen_utils::copy_block(m_Obs, idx*getNumberOfOutputs(),0,getNumberOfOutputs(), getOrder(), m_C*pow_a);
     pow_a=pow_a*m_A;
