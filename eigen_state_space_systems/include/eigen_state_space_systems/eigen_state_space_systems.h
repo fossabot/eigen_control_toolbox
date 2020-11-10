@@ -125,32 +125,48 @@ class DiscreteStateSpace : public BaseDiscreteStateSpace
 private:
   enum { IW = (I > 0 && S > 0 ? I*S : Eigen::Dynamic), MaxIW = (MaxI>0 && MaxS>0 ? MaxI>0 && MaxS>0 : Eigen::Dynamic),
          OW = (O > 0 && S > 0 ? O*S : Eigen::Dynamic), MaxOW = (MaxO>0 && MaxS>0 ? MaxO>0 && MaxS>0 : Eigen::Dynamic),
-         };
+         S_RC  = 0, // it is always Eigen::ColMajor
+         I_RC  = 0, // it is always Eigen::ColMajor
+         O_RC  = 0, // it is always Eigen::ColMajor
+         A_RC  = 0, // it is always Eigen::ColMajor
+         B_RC  = S==1 && (I>1||I==Eigen::Dynamic) ? Eigen::RowMajor : Eigen::ColMajor,
+         C_RC  = O==1 && (S>1||S==Eigen::Dynamic) ? Eigen::RowMajor : Eigen::ColMajor,
+         D_RC  = O==1 && (I>1||I==Eigen::Dynamic) ? Eigen::RowMajor : Eigen::ColMajor,
+         IW_RC = 0, // it is always Eigen::ColMajor
+         OW_RC = 0, // it is always Eigen::ColMajor
+         OBS_RC = OW==1 && (S >1||S ==Eigen::Dynamic) ? Eigen::RowMajor : Eigen::ColMajor,
+         I2O_RC = OW==1 && (IW>1||IW==Eigen::Dynamic) ? Eigen::RowMajor : Eigen::ColMajor,
+         S_MAX  = S ==Eigen::Dynamic ? MaxS : S,
+         I_MAX  = I ==Eigen::Dynamic ? MaxI : I,
+         O_MAX  = O ==Eigen::Dynamic ? MaxO : O,
+         IW_MAX = IW==Eigen::Dynamic ? MaxIW : IW,
+         OW_MAX = OW==Eigen::Dynamic ? MaxOW : OW,
+        };
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   using State = typename std::conditional<S==1, 
-                    double, Eigen::Matrix<double,S,1,0,MaxS>>::type;
+                    double, Eigen::Matrix<double,S,1,S_RC,S_MAX>>::type;
   using Input   = typename std::conditional<I==1, 
-                    double, Eigen::Matrix<double,I,1,0,MaxI>>::type;
+                    double, Eigen::Matrix<double,I,1,I_RC,I_MAX>>::type;
   using Output  = typename std::conditional<O==1, 
-                    double, Eigen::Matrix<double,O,1,0,MaxO>>::type;
+                    double, Eigen::Matrix<double,O,1,O_RC,O_MAX,1>>::type;
   using MatrixA = typename std::conditional<S==1, 
-                    double, Eigen::Matrix<double,S,S,0,MaxS,MaxS>>::type;
+                    double, Eigen::Matrix<double,S,S,A_RC,S_MAX,S_MAX>>::type;
   using MatrixB = typename std::conditional<S==1 && I==1, 
-                    double, Eigen::Matrix<double,S,I,0,MaxS,MaxI>>::type;
+                    double, Eigen::Matrix<double,S,I,B_RC,S_MAX,I_MAX>>::type;
   using MatrixC = typename std::conditional<O==1 && S==1, 
-                    double, Eigen::Matrix<double,O,S,0,MaxO,MaxS>>::type;
+                    double, Eigen::Matrix<double,O,S,C_RC,O_MAX,S_MAX>>::type;
   using MatrixD = typename std::conditional<O==1 && I==1,
-                    double, Eigen::Matrix<double,O,I,0,MaxO, MaxI>>::type;
+                    double, Eigen::Matrix<double,O,I,D_RC,O_MAX, I_MAX>>::type;
   using InputWindow = typename std::conditional<IW==1, 
-                    double, Eigen::Matrix<double,IW,1,0,MaxIW>>::type;
+                    double, Eigen::Matrix<double,IW,1,IW_RC,IW_MAX>>::type;
   using OutputWindow = typename std::conditional<OW==1, 
-                    double, Eigen::Matrix<double,OW,1,0,MaxOW>>::type;
+                    double, Eigen::Matrix<double,OW,1,OW_RC,OW_MAX>>::type;
   using MatrixObs = typename std::conditional<OW==1 && S==1, 
-                    double, Eigen::Matrix<double,OW,S,0,MaxOW, MaxS>>::type;
+                    double, Eigen::Matrix<double,OW,S,OBS_RC,OW_MAX, S_MAX>>::type;
   using MatrixI2O = typename std::conditional<OW==1 && IW==1, 
-                    double, Eigen::Matrix<double,OW,IW,0,MaxOW, MaxIW>>::type;
+                    double, Eigen::Matrix<double,OW,IW,I2O_RC,OW_MAX, IW_MAX>>::type;
 
   DiscreteStateSpace()=default;
   virtual ~DiscreteStateSpace() = default;

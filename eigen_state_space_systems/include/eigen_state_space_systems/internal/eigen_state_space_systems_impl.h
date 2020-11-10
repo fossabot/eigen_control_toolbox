@@ -68,13 +68,14 @@ namespace eigen_utils
     }
   }
 
-
+  // double, double
   bool copy(double& lhs, const double& rhs)
   {
     lhs = rhs;
     return true;
   }
 
+  // double, matrix
   template<typename Derived> 
   bool copy(double& lhs, const Eigen::MatrixBase<Derived>& rhs)
   {
@@ -86,6 +87,7 @@ namespace eigen_utils
     return true;
   }
 
+  // matrix, matrix
   template<typename Derived, typename OtherDerived>
   bool copy(Eigen::MatrixBase<Derived> & lhs, 
             const Eigen::MatrixBase<OtherDerived>& rhs)
@@ -95,13 +97,25 @@ namespace eigen_utils
     lhs = rhs;
   }
 
+  // matrix, double
+  template<typename Derived> 
+  bool copy(Eigen::MatrixBase<Derived>& lhs, const double& rhs)
+  {
+    lhs.setConstant(rhs);
+    return true;
+  }
+
+
   // A least-squares solution of m*x = rhs
+  //     x   = S x 1
+  //     rhs = (OxS) x 1
+  //     m   = (OxS) x S
   template<typename Derived, typename InputDerived, typename OutputDerived>
   bool svd( const Eigen::MatrixBase<Derived>& m, // OW x S
             const Eigen::MatrixBase<InputDerived>& rhs,
             Eigen::MatrixBase<OutputDerived>& x)
   {
-    Eigen::JacobiSVD< Eigen::MatrixXd > svd(m, Eigen::ComputeThinU | Eigen::ComputeThinV);
+    Eigen::JacobiSVD< Derived > svd(m, Eigen::ComputeThinU | Eigen::ComputeThinV);
     if(svd.rank()<m.cols())
     {
       return false;
@@ -293,7 +307,7 @@ inline void DiscreteStateSpace<S,I,O,MS,MI,MO>::setStateFromIO(
   Input u;
   for(int istep=0;istep<getOrder();istep++)  
   {
-    u = eigen_utils::block(m_past_input, istep*getNumberOfInputs(),0,getNumberOfInputs(),1);
+    eigen_utils::copy_block(u, istep*getNumberOfInputs(),0,getNumberOfInputs(),1, m_past_input);
     update(u);
   }
 }
@@ -306,8 +320,8 @@ inline void DiscreteStateSpace<S,I,O,MS,MI,MO>::setStateFromLastIO(const Input& 
   
   for (unsigned int idx=0;idx<getOrder();idx++)
   {
-    eigen_utils::block(m_past_input,  idx*getNumberOfInputs(),0,getNumberOfInputs(),1)=inputs;
-    eigen_utils::block(m_past_output, idx*getNumberOfInputs(),0,getNumberOfInputs(),1)=outputs;
+    eigen_utils::copy_block(m_past_input,  idx*getNumberOfInputs(), 0,getNumberOfInputs(), 1, inputs);
+    eigen_utils::copy_block(m_past_output, idx*getNumberOfOutputs(),0,getNumberOfOutputs(),1, outputs);
   }
   setStateFromIO(m_past_input,m_past_output);
 }
@@ -317,9 +331,9 @@ const typename DiscreteStateSpace<S,I,O,MS,MI,MO>::MatrixI2O& DiscreteStateSpace
   eigen_utils::setZero(m_i2o);
   for (unsigned int idx=0;idx<getOrder();idx++)
   {
-    eigen_utils::block(m_i2o, 
-        idx*getNumberOfOutputs(),idx*getNumberOfInputs(),
-        getNumberOfOutputs(),getNumberOfInputs())=m_D;
+    eigen_utils::copy_block(m_i2o,  
+        idx*getNumberOfOutputs(),idx*getNumberOfInputs(), getNumberOfOutputs(),getNumberOfInputs(), 
+        m_D);
   }
   
   MatrixA powA;
@@ -330,9 +344,9 @@ const typename DiscreteStateSpace<S,I,O,MS,MI,MO>::MatrixI2O& DiscreteStateSpace
   {
     for (unsigned int idx2=0;idx2<(getOrder()-idx);idx2++)
     {
-      eigen_utils::block(m_i2o, 
-        (idx+idx2)*getNumberOfOutputs(),(idx2)*getNumberOfInputs(),
-        getNumberOfOutputs(),getNumberOfInputs())=m_C*powA*m_B;
+      eigen_utils::copy_block(m_i2o, 
+        (idx+idx2)*getNumberOfOutputs(),(idx2)*getNumberOfInputs(), getNumberOfOutputs(),getNumberOfInputs(), 
+        m_C*powA*m_B);
     }
     powA*=m_A;
   }
@@ -351,7 +365,7 @@ inline const typename DiscreteStateSpace<S,I,O,MS,MI,MO>::MatrixObs&
   
   for (unsigned int idx=0;idx<  getOrder();idx++)
   {
-    eigen_utils::block(m_Obs, idx*getNumberOfOutputs(),0,getNumberOfOutputs(),  getOrder())=m_C*pow_a;
+    eigen_utils::copy_block(m_Obs, idx*getNumberOfOutputs(),0,getNumberOfOutputs(), getOrder(), m_C*pow_a);
     pow_a=pow_a*m_A;
   }
   
