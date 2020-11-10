@@ -81,7 +81,6 @@ public:
   {
     return m_sampling_period;
   }
-
 };
 
 typedef BaseDiscreteStateSpace::Ptr BaseDiscreteStateSpacePtr;
@@ -91,6 +90,7 @@ typedef BaseDiscreteStateSpace::ConstPtr BaseDiscreteStateSpaceConstPtr;
  * 
  * 
  */
+inline 
 bool createDiscreteStateSpace(const ros::NodeHandle&  nh, const std::string& name, BaseDiscreteStateSpacePtr dss)
 {
   Eigen::MatrixXd A,B,C,D;
@@ -166,15 +166,15 @@ public:
                            const Eigen::MatrixXd& D,
                            std::string&           error);
    
-  const MatrixA& getAMatrix()         const {return m_A;};
-  const MatrixB& getBMatrix()         const {return m_B;};
-  const MatrixC& getCMatrix()         const {return m_C;};
-  const MatrixD& getDMatrix()         const {return m_D;};
-  const Output&  getOutput()          const {return m_output;};
-  const State&   getState()           const {return m_state;};
-  unsigned int   getOrder()           const {return m_state.rows();};
-  unsigned int   getNumberOfInputs()  const {return m_input.rows();};
-  unsigned int   getNumberOfOutputs() const {return m_output.rows();};
+  const MatrixA& getAMatrix() const {return m_A;};
+  const MatrixB& getBMatrix() const {return m_B;};
+  const MatrixC& getCMatrix() const {return m_C;};
+  const MatrixD& getDMatrix() const {return m_D;};
+  const Output&  getOutput()  const {return m_output;};
+  const State&   getState()   const {return m_state;};
+  int   getOrder()            const {return m_state.rows();};
+  int   getNumberOfInputs()   const {return m_input.rows();};
+  int   getNumberOfOutputs()  const {return m_output.rows();};
   
   void setState(const State& state);
   
@@ -219,9 +219,6 @@ protected:
   MatrixI2O m_i2o;
   InputWindow m_past_input;
   OutputWindow m_past_output;
-  
-
-
 };
 
 template<int S,int I,int O,int MS=S,int MI=I,int MO=O>

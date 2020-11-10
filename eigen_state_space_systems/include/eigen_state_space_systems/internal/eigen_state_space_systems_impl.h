@@ -391,7 +391,7 @@ inline void DiscreteStateSpace<S,1,1,MS,1,1>::setStateFromIO(
   }
 
   Input u;
-  for (int istep=0;istep<getOrder();istep++)
+  for(int istep=0;istep<getOrder();istep++)
   {
     u = m_past_input(istep,0);
     update(u);

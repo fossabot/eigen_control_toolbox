@@ -9,24 +9,41 @@ namespace eigen_control_toolbox
 {
 
 template< int S, int I, int O, int MS, int MI, int MO >
-inline Controller<S,I,O,MS,MI,MO>::Controller(const Controller<S,I,O,MS,MI,MO>::MatrixA& A, 
-                                              const Controller<S,I,O,MS,MI,MO>::MatrixB& B, 
-                                              const Controller<S,I,O,MS,MI,MO>::MatrixC& C, 
-                                              const Controller<S,I,O,MS,MI,MO>::MatrixD& D)
+inline Controller<S,I,O,MS,MI,MO>::Controller(const Eigen::MatrixXd& A, 
+                                              const Eigen::MatrixXd& B, 
+                                              const Eigen::MatrixXd& C, 
+                                              const Eigen::MatrixXd& D) 
+  : DiscreteStateSpace<S,I,O,MS,MI,MO>(A,B,C,D) 
 {
-  Controller<S,I,O,MS,MI,MO>::setMatrices(A,B,C,D);
 }
 
 template< int S, int I, int O, int MS, int MI, int MO >
-inline void Controller<S,I,O,MS,MI,MO>::setMatrices(const Controller<S,I,O,MS,MI,MO>::MatrixA& A, 
-                                                    const Controller<S,I,O,MS,MI,MO>::MatrixB& B, 
-                                                    const Controller<S,I,O,MS,MI,MO>::MatrixC& C, 
-                                                    const Controller<S,I,O,MS,MI,MO>::MatrixD& D)
+inline bool Controller<S,I,O,MS,MI,MO>::setMatrices(const Eigen::MatrixXd& A, 
+                                                    const Eigen::MatrixXd& B, 
+                                                    const Eigen::MatrixXd& C, 
+                                                    const Eigen::MatrixXd& D,
+                                                    std::string&           error)
 {
-  eigen_control_toolbox::Controller<S,I,O,MS,MI,MO>::setMatrices(A, B, C, D);
+  if(!eigen_control_toolbox::Controller<S,I,O,MS,MI,MO>::setMatrices(A, B, C, D, error))
+  {
+    std::cerr << __PRETTY_FUNCTION__ <<":" << __LINE__ <<":" << error << std::endl;
+    return false;
+  }
   
-  m_Baw.resize(this->getOrder(),this->getNumberOfOutputs());
+  if(!eigen_utils::resize(m_Baw, this->getOrder(),this->getNumberOfOutputs()))
+  {
+    std::cerr << __PRETTY_FUNCTION__ <<":" << __LINE__ <<": Resize Baw failed. Dimension mismatch" << std::endl;
+    return false;
+  }
+
+  if(!eigen_utils::resize(m_aw, this->getNumberOfOutputs(),1))
+  {
+    std::cerr << __PRETTY_FUNCTION__ <<":" << __LINE__ <<": Resize aw failed. Dimension mismatch" << std::endl;
+    return false;
+  }
+
   m_Baw.setZero();
+  return true;
 }
 
 template< int S, int I, int O, int MS, int MI, int MO >
@@ -36,12 +53,12 @@ inline Controller<S,I,O,MS,MI,MO>::Controller()
 }
 
 template< int S, int I, int O, int MS, int MI, int MO >
-inline void Controller<S,I,O,MS,MI,MO>::setAntiWindupMatrix(const Eigen::Ref< Eigen::MatrixXd > Baw)
+inline void Controller<S,I,O,MS,MI,MO>::setAntiWindupMatrix(const MatrixBaw& Baw)
 {
   assert(Baw.rows()==this->getOrder());
   assert(Baw.cols()==this->getNumberOfOutputs());
   
-  m_Baw=Baw;
+  m_Baw = Baw;
 }
 
 template< int S, int I, int O, int MS, int MI, int MO >
@@ -74,7 +91,11 @@ inline bool Controller<S,I,O,MS,MI,MO>::importMatricesFromParam(const ros::NodeH
   else if (!type.compare("state-space"))
   {
 
-    Controller<S,I,O,MS,MI,MO>::importMatricesFromParam(nh,name);
+    if(!Controller<S,I,O,MS,MI,MO>::importMatricesFromParam(nh,name))
+    {
+      return false;
+    }
+
     Eigen::MatrixXd aw_gain;   //antiwindup_gain
     std::vector<double> aw_states; //antiwindup_gain
 
@@ -101,20 +122,14 @@ inline bool Controller<S,I,O,MS,MI,MO>::importMatricesFromParam(const ros::NodeH
       return false;
     }
 
-    Eigen::MatrixXd Baw=this->m_B*aw_gain;
-    // Baw norder x nout
-    // B  norder x nin
-    // aw_gain nin x nout
-    // Baw=m_B*aw_gain  ===>  (norder x nout) = (norder x nin) x ( nin x nout)
-
-
-    for (unsigned int iord=0;iord<this->getOrder();iord++)
+    m_Baw = this->m_B * aw_gain;
+    for(unsigned int iord=0;iord<this->getOrder();iord++)
     {
       if (!aw_states.at(iord))
-        Baw.row(iord).setZero();
+      {
+        m_Baw.row(iord).setZero();
+      }
     }
-
-    setAntiWindupMatrix(Baw);
   }
   else if (!type.compare("none"))
   {
@@ -133,8 +148,8 @@ template< int S, int I, int O, int MS, int MI, int MO >
 inline void Controller<S,I,O,MS,MI,MO>::antiwindup(const Controller<S,I,O,MS,MI,MO>::Output& saturated_output, 
                                                    const Controller<S,I,O,MS,MI,MO>::Output& unsaturated_output)
 {
-  Eigen::VectorXd aw=saturated_output-unsaturated_output;
-  this->m_state+=this->m_Baw*aw;
+  m_aw = saturated_output-unsaturated_output;
+  this->m_state+=this->m_Baw * m_aw;
 }
 
 template< int S, int I, int O, int MS, int MI, int MO >
@@ -290,7 +305,6 @@ inline bool Controller<S,I,O,MS,MI,MO>::importPIFromParam(const ros::NodeHandle 
   setPI(Kp,Ki,sample_period);
   return true;
 }
-
 
 }
 
