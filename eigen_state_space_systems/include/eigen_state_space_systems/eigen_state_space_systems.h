@@ -123,8 +123,11 @@ template< int S,          // State Dimension
 class DiscreteStateSpace : public BaseDiscreteStateSpace
 {
 private:
-  enum { IW = (I > 0 && S > 0 ? I*S : Eigen::Dynamic), MaxIW = (MaxI>0 && MaxS>0 ? MaxI>0 && MaxS>0 : Eigen::Dynamic),
-         OW = (O > 0 && S > 0 ? O*S : Eigen::Dynamic), MaxOW = (MaxO>0 && MaxS>0 ? MaxO>0 && MaxS>0 : Eigen::Dynamic),
+  // some useful constant at compile time are introduced, in o
+  enum { IW    = (I > 0 && S > 0 ? I*S : Eigen::Dynamic),               // dimension of the input window
+         OW    = (O > 0 && S > 0 ? O*S : Eigen::Dynamic),               // dimension of the output window
+         MaxIW = (MaxI>0 && MaxS>0 ? MaxI>0 && MaxS>0 : Eigen::Dynamic),
+         MaxOW = (MaxO>0 && MaxS>0 ? MaxO>0 && MaxS>0 : Eigen::Dynamic),
          S_RC  = 0, // it is always Eigen::ColMajor
          I_RC  = 0, // it is always Eigen::ColMajor
          O_RC  = 0, // it is always Eigen::ColMajor
@@ -234,7 +237,6 @@ public:
 
 
 protected:
-
   State  m_state;
   Input  m_input;
   Output m_output;

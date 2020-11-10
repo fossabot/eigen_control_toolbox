@@ -1,8 +1,8 @@
 #ifndef   eigen_state_space_systems_impl_201811280956
 #define   eigen_state_space_systems_impl_201811280956
 
-#include <eigen_state_space_systems/eigen_control_utils.h>
 #include <eigen_matrix_utils/eigen_matrix_utils.h>
+#include <eigen_state_space_systems/eigen_control_utils.h>
 #include <eigen_state_space_systems/eigen_state_space_systems.h>
 
 namespace eigen_utils
