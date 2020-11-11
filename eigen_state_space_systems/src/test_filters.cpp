@@ -10,28 +10,55 @@ int main(int argc,char** argv)
 
   srand((unsigned int) time(0));
 
-  double natural_frequency = 500; // [rad/s]
-  double sampling_period=0.001; // s
-  eigen_control_toolbox::FirstOrderLowPass lpf(natural_frequency,sampling_period);
+  double natural_frequency =   500; // [rad/s]
+  double sampling_period   = 0.001; // s
 
-//  lpf.importMatricesFromParam(nh,"/filter"); //you can load filter coefficient from ROS param
-  unsigned int order = lpf.getOrder();
-  unsigned int nin   = lpf.getNumberOfInputs();
-  unsigned int nout  = lpf.getNumberOfOutputs();
-
-  double u=0;
-  double y=0;
-
-  lpf.setStateFromLastIO(u,  y);
-  ROS_INFO_STREAM("state:\n"<<lpf.getState());
-  ROS_INFO_STREAM("output:\n"<<lpf.getOutput() << "\ndesired:\n"<<y);
-  
-  for (unsigned int i=0;i<10;i++)
   {
-    u=1;
-    y=lpf.update(u);
-    ROS_INFO_STREAM("output:"<<y << ", input:"<<u);
+    eigen_control_toolbox::FirstOrderLowPassX lpf(natural_frequency,sampling_period);
 
+    //lpf.importMatricesFromParam(nh,"/filter"); //you can load filter coefficient from ROS param
+    unsigned int order = lpf.getOrder();
+    unsigned int nin   = lpf.getNumberOfInputs();
+    unsigned int nout  = lpf.getNumberOfOutputs();
+
+    Eigen::VectorXd u(1); u.setZero();
+    Eigen::VectorXd y(1); y.setZero();
+
+    lpf.setStateFromLastIO(u,  y);
+    ROS_INFO_STREAM("state:\n"<<lpf.getState());
+    ROS_INFO_STREAM("output:\n"<<lpf.getOutput() << "\ndesired:\n"<<y);
+    
+    for (unsigned int i=0;i<10;i++)
+    {
+      u(0)=1;
+      y=lpf.update(u);
+      ROS_INFO_STREAM("output:"<<y << ", input:"<<u);
+    }
   }
+
+  {
+    eigen_control_toolbox::FirstOrderLowPass<1> lpf(natural_frequency,sampling_period);
+
+    lpf.importMatricesFromParam(nh,"/filter"); //you can load filter coefficient from ROS param
+    unsigned int order = lpf.getOrder();
+    unsigned int nin   = lpf.getNumberOfInputs();
+    unsigned int nout  = lpf.getNumberOfOutputs();
+
+    double u=0;
+    double y=0;
+
+    lpf.setStateFromLastIO(u,  y);
+    ROS_INFO_STREAM("state:\n"<<lpf.getState());
+    ROS_INFO_STREAM("output:\n"<<lpf.getOutput() << "\ndesired:\n"<<y);
+    
+    for (unsigned int i=0;i<10;i++)
+    {
+      u=1;
+      y=lpf.update(u);
+      ROS_INFO_STREAM("output:"<<y << ", input:"<<u);
+    }
+  }
+  
+
   return 0; 
 }

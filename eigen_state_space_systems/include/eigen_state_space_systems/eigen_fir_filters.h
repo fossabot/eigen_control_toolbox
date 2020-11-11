@@ -18,33 +18,25 @@ namespace eigen_control_toolbox
   
  */
 
-  template< int DIM, int MaxDIM = DIM>
-  class FirFilter: public DiscreteStateSpace<DIM,1,DIM,MaxDIM,1,MaxDIM>
+  template< int N, int MaxN = N>
+  class FirFilter: public DiscreteStateSpace<N,1,N,MaxN,1,MaxN>
   {
   protected:
   public: 
 
-    typedef Eigen::Matrix<double, DIM, DIM, 0, MaxDIM, MaxDIM> MatrixCoeff;
+    typedef Eigen::Matrix<double, N, N, 0, MaxN, MaxN> MatrixCoeff;
     
-    typedef typename DiscreteStateSpace<DIM,1,DIM,MaxDIM,1,MaxDIM>::Input Input;
-    typedef typename DiscreteStateSpace<DIM,1,DIM,MaxDIM,1,MaxDIM>::Output Output;
-    typedef typename DiscreteStateSpace<DIM,1,DIM,MaxDIM,1,MaxDIM>::InputWindow InputWindow;
-    typedef typename DiscreteStateSpace<DIM,1,DIM,MaxDIM,1,MaxDIM>::OutputWindow OutputWindow;
+    typedef typename DiscreteStateSpace<N,1,N,MaxN,1,MaxN>::Input Input;
+    typedef typename DiscreteStateSpace<N,1,N,MaxN,1,MaxN>::Output Output;
+    typedef typename DiscreteStateSpace<N,1,N,MaxN,1,MaxN>::InputWindow InputWindow;
+    typedef typename DiscreteStateSpace<N,1,N,MaxN,1,MaxN>::OutputWindow OutputWindow;
     
     FirFilter();
     FirFilter(const MatrixCoeff& coeffs);
     void computeMatrices(const MatrixCoeff& coeffs);
     
-    /*
-     * 
-     * void setStateFromIO(const Eigen::Ref<Eigen::VectorXd> past_inputs,
-     *                     const Eigen::Ref<Eigen::VectorXd> past_outputs);
-     * 
-     * Compute state from input output, past inputs and outputs during a time window large as the state
-     */
     virtual void setStateFromIO(const InputWindow& past_inputs, const OutputWindow& OutputWindow);
-    virtual const Output& update(const Input& input);
-    
+    virtual const Output& update(const Input& input);    
   };
   
   

@@ -19,8 +19,9 @@ namespace eigen_control_toolbox
  * @brief The function extract the Matrices descring the Discrete Space System. 
  * The Discrete Space System describe the mathematical equations
  * 
- * X(k) = A * X(k-1) + B*u(k);
- * Y(k) = C * X(k-1) + D*u(k);
+ * X(k) = A * X(k-1) + B*u(k)
+ * 
+ * Y(k) = C * X(k-1) + D*u(k)
  * 
  * where 'X', 'y', and 'u' are the state, the output and the input respectively
  * 
@@ -32,6 +33,7 @@ namespace eigen_control_toolbox
  * @param[out]  B Matrix B
  * @param[out]  C Matrix C
  * @param[out]  D Matrix D
+ * @param[out]  what a string with the error, if something wrong happen inside
  * @return bool false if the params are not found in the param server, true otherwise
  * */
 bool importMatricesFromParam( const ros::NodeHandle&  nh, 
@@ -64,10 +66,6 @@ public:
   typedef std::shared_ptr<BaseDiscreteStateSpace const> ConstPtr;
   
   BaseDiscreteStateSpace()=default;
-  BaseDiscreteStateSpace(const Eigen::MatrixXd& A, 
-                         const Eigen::MatrixXd& B, 
-                         const Eigen::MatrixXd& C, 
-                         const Eigen::MatrixXd& D) = default;
   virtual ~BaseDiscreteStateSpace() = default;
 
   /**
@@ -103,12 +101,13 @@ typedef BaseDiscreteStateSpace::ConstPtr BaseDiscreteStateSpaceConstPtr;
 bool createDiscreteStateSpace(const ros::NodeHandle&  nh, const std::string& name, BaseDiscreteStateSpacePtr dss);
 
 
-/** << NOTE
+/** 
  * @brief The function extract the Matrices descring the Discrete Space System. 
  * The Discrete Space System describe the mathematical equations
  * 
  * X(k) = A * X(k-1) + B*u(k);
- * Y(k) = C * X(k-1) + D*u(k);
+ * 
+ * Y(k) = C * X(k)   + D*u(k);
  * 
  * where 'X', 'y', and 'u' are the state, the output and the input respectively
  * \tparam S State Dimension
@@ -290,11 +289,12 @@ public:
   //! @brief compute the input to output matrix
   const MatrixI2O& computeInputToOutputMatrix( );
 
-
+  bool initialized();
+  
 protected:
-  State  m_state;
-  Input  m_input;
-  Output m_output;
+  State  m_state;   //< To store the state, and update at each cycle
+  Input  m_input;   //< To store only the dimension of the input.
+  Output m_output;  //< To store only the dimension of the output.
   
   MatrixA m_A;
   MatrixB m_B;

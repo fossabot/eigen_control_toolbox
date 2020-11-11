@@ -18,12 +18,13 @@ namespace eigen_utils
   template<typename Derived,
           std::enable_if_t< (Eigen::MatrixBase<Derived>::RowsAtCompileTime == Eigen::Dynamic) 
                           ||(Eigen::MatrixBase<Derived>::ColsAtCompileTime == Eigen::Dynamic) 
-                          , int> = 0> 
+                          , int> = 0>
   inline bool checkInputDim(const std::string& id, const Eigen::MatrixBase<Derived>& m, int rows, int cols, std::string& error)
   {
-    if((m.rows() !=  rows)||(m.cols()!= cols))
+    if((m.rows()!= rows)||(m.cols()!= cols))
     {
-      error =    id + " dimension mismatch."
+      error += std::string(__PRETTY_FUNCTION__) + ":" + std::to_string(__LINE__) + ":\n";
+      error +=    id + " dimension mismatch."
           " Object size: " + std::to_string(m.rows()) + "x" + std::to_string(m.cols()) + ","
           " Expected size: " + std::to_string(rows) + "x" + std::to_string(cols) + "";
       return false;
@@ -53,7 +54,7 @@ namespace eigen_utils
   template<typename Derived>
   inline void checkInputDimAndThrowEx(const std::string& id, const Eigen::MatrixBase<Derived>& m, int rows, int cols)
   {
-    std::string error;
+    std::string error = std::string(__PRETTY_FUNCTION__) + ":" + std::to_string(__LINE__) + ":\n";
     if(!eigen_utils::checkInputDim(id,m,rows,cols,error))
     {
       throw std::runtime_error(error.c_str());
@@ -271,7 +272,6 @@ inline DiscreteStateSpace<S,I,O,MS,MI,MO>::DiscreteStateSpace(
       const Eigen::MatrixXd& B, 
       const Eigen::MatrixXd& C, 
       const Eigen::MatrixXd& D) 
-  : BaseDiscreteStateSpace(A,B,C,D) 
 {
   std::string error;
   if(!this->setMatrices(A,B,C,D,error))
@@ -295,17 +295,18 @@ inline bool DiscreteStateSpace<S,I,O,MS,MI,MO>::setMatrices(
   }
   if(I==Eigen::Dynamic)
   {
-    eigen_utils::resize(m_input, eigen_utils::cols(m_B), 1);
+    eigen_utils::resize(m_input, eigen_utils::cols(B), 1);
   }
   if(O==Eigen::Dynamic)
   {
-    eigen_utils::resize(m_output, eigen_utils::rows(m_C), 1);
+    eigen_utils::resize(m_output, eigen_utils::rows(C), 1);
   }
+  error += std::string(__PRETTY_FUNCTION__) + ":\n\t";
 
-  if(!eigen_utils::checkInputDim("A", A, getOrder(),           getOrder()          , error)) return false;
-  if(!eigen_utils::checkInputDim("B", B, getOrder(),           getNumberOfInputs() , error)) return false;
-  if(!eigen_utils::checkInputDim("C", C, getNumberOfOutputs(), getOrder()          , error)) return false;
-  if(!eigen_utils::checkInputDim("D", D, getNumberOfOutputs(), getNumberOfInputs() , error)) return false;
+  if(!eigen_utils::checkInputDim("Matrix A", A, getOrder(),           getOrder()          , error)) return false;
+  if(!eigen_utils::checkInputDim("Matrix B", B, getOrder(),           getNumberOfInputs() , error)) return false;
+  if(!eigen_utils::checkInputDim("Matrix C", C, getNumberOfOutputs(), getOrder()          , error)) return false;
+  if(!eigen_utils::checkInputDim("Matrix D", D, getNumberOfOutputs(), getNumberOfInputs() , error)) return false;
 
   // it may change the dimension of the problem if the matrixes are dynamically allocated
   eigen_utils::copy(m_A, A); //A is S x S 
@@ -317,6 +318,7 @@ inline bool DiscreteStateSpace<S,I,O,MS,MI,MO>::setMatrices(
   eigen_utils::resize(m_i2o        , getNumberOfOutputs()*getOrder(), getNumberOfInputs()*getOrder() );  // i2o is (OxS) x (IxS))
   eigen_utils::resize(m_past_input , getNumberOfInputs ()*getOrder(), 1); //  is IxS
   eigen_utils::resize(m_past_output, getNumberOfOutputs()*getOrder(), 1); //  is IxS
+
   return true;
 }
 
@@ -325,7 +327,13 @@ template< int S, int I, int O, int MS, int MI, int MO >
 inline typename DiscreteStateSpace<S,I,O,MS,MI,MO>::Output& 
   DiscreteStateSpace<S,I,O,MS,MI,MO>::update(const DiscreteStateSpace<S,I,O,MS,MI,MO>::Input& input)
 {
+  if(!DiscreteStateSpace<S,I,O,MS,MI,MO>::initialized())
+  {
+    throw std::runtime_error("The Discrete State Space has not been yet initialized (i.e., the matrices are undefined). Abort.");  
+  }
+
   eigen_utils::checkInputDimAndThrowEx("Input", m_input, eigen_utils::rows(input), 1);
+
   m_input  = input; 
   m_output = m_C*m_state + m_D*m_input;
   m_state  = m_A*m_state + m_B*m_input;
@@ -335,7 +343,13 @@ inline typename DiscreteStateSpace<S,I,O,MS,MI,MO>::Output&
 template< int S, int I, int O, int MS, int MI, int MO > 
 inline void DiscreteStateSpace<S,I,O,MS,MI,MO>::setState(const DiscreteStateSpace<S,I,O,MS,MI,MO>::State& state)
 {
+  if(!DiscreteStateSpace<S,I,O,MS,MI,MO>::initialized())
+  {
+    throw std::runtime_error("The Discrete State Space has not been yet initialized (i.e., the matrices are undefined). Abort.");  
+  }
+  
   eigen_utils::checkInputDimAndThrowEx("State", m_state, eigen_utils::rows(state), 1);
+  
   m_state = state;
 }
 
@@ -375,11 +389,10 @@ inline void DiscreteStateSpace<S,I,O,MS,MI,MO>::setStateFromIO(
     ROS_DEBUG("Matrix is rank deficient");
   }
   
-  Input u;
   for(int istep=0;istep<getOrder();istep++)  
   {
-    eigen_utils::copy_block(u, istep*getNumberOfInputs(),0,getNumberOfInputs(),1, m_past_input);
-    update(u);
+    eigen_utils::copy_block(m_input, istep*getNumberOfInputs(),0,getNumberOfInputs(),1, m_past_input);
+    update( m_input );
   }
 }
 
@@ -441,6 +454,12 @@ inline const typename DiscreteStateSpace<S,I,O,MS,MI,MO>::MatrixObs&
   }
   
   return m_Obs;
+}
+
+template< int S, int I, int O, int MS, int MI, int MO > 
+inline bool DiscreteStateSpace<S,I,O,MS,MI,MO>::initialized()
+{
+  return getOrder() > 0 && getNumberOfInputs() > 0 && getNumberOfOutputs() > 0;
 }
 
 template< int S, int I, int O, int MS, int MI, int MO > inline void DiscreteStateSpace<S,I,O,MS,MI,MO>::print()

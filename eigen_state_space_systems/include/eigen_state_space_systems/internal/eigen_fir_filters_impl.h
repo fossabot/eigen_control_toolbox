@@ -6,20 +6,20 @@
 namespace eigen_control_toolbox
 {
 
-template<int DIM, int MaxDIM> 
-inline FirFilter<DIM,MaxDIM>::FirFilter()
+template<int N, int MaxN> 
+inline FirFilter<N,MaxN>::FirFilter()
 {
 
 }
 
-template<int DIM, int MaxDIM> 
-inline FirFilter<DIM,MaxDIM>::FirFilter(const FirFilter<DIM,MaxDIM>::MatrixCoeff& coeffs)
+template<int N, int MaxN> 
+inline FirFilter<N,MaxN>::FirFilter(const FirFilter<N,MaxN>::MatrixCoeff& coeffs)
 {
   computeMatrices(coeffs);
 }
 
-template<int DIM, int MaxDIM> 
-inline void FirFilter<DIM,MaxDIM>::computeMatrices(const FirFilter<DIM,MaxDIM>::MatrixCoeff& coeffs)
+template<int N, int MaxN> 
+inline void FirFilter<N,MaxN>::computeMatrices(const FirFilter<N,MaxN>::MatrixCoeff& coeffs)
 {
 
   this->initState(coeffs.cols());
@@ -38,9 +38,9 @@ inline void FirFilter<DIM,MaxDIM>::computeMatrices(const FirFilter<DIM,MaxDIM>::
   this->m_D=coeffs.block(0,0,this->getNumberOfOutputs(),1);
 }
 
-template<int DIM, int MaxDIM> 
-inline const typename FirFilter<DIM,MaxDIM>::Output&
- FirFilter<DIM,MaxDIM>::update(const FirFilter<DIM,MaxDIM>::Input& input)
+template<int N, int MaxN> 
+inline const typename FirFilter<N,MaxN>::Output&
+ FirFilter<N,MaxN>::update(const FirFilter<N,MaxN>::Input& input)
 {
   this->checkInput(input.rows());
 
@@ -51,9 +51,9 @@ inline const typename FirFilter<DIM,MaxDIM>::Output&
   return this->m_output;
 }
 
-template<int DIM, int MaxDIM> 
-inline void FirFilter<DIM,MaxDIM>::setStateFromIO(const FirFilter<DIM,MaxDIM>::InputWindow& past_inputs, 
-                                                  const FirFilter<DIM,MaxDIM>::OutputWindow& past_outputs)
+template<int N, int MaxN> 
+inline void FirFilter<N,MaxN>::setStateFromIO(const FirFilter<N,MaxN>::InputWindow& past_inputs, 
+                                                  const FirFilter<N,MaxN>::OutputWindow& past_outputs)
 {
   this->checkOutput( past_outputs.rows() );
 //  this->m_state = past_inputs; // ?? //
