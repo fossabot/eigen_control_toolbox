@@ -29,6 +29,7 @@ protected:
 
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  
   typedef std::shared_ptr<FirstOrderLowPass<N,MaxN>> Ptr;
   typedef std::shared_ptr<FirstOrderLowPass<N,MaxN> const> ConstPtr;
 

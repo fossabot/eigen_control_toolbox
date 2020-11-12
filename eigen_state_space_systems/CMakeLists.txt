@@ -58,7 +58,7 @@ install(DIRECTORY include/${PROJECT_NAME}/
 ## Add gtest based cpp test target and link libraries
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
-  add_rostest_gtest(filtered_values_test test/filtered_values_test.launch test/filtered_values_test.cpp)
+  add_rostest_gtest(filtered_values_test test/test_filtered_values.launch test/test_filtered_values.cpp)
   target_link_libraries(filtered_values_test ${catkin_LIBRARIES} ${rostest_LIBRARIES} )
 
   add_rostest_gtest(test_filters test/test_filters.launch test/test_filters.cpp)

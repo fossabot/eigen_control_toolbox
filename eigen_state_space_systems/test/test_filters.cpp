@@ -31,7 +31,7 @@ TEST(TestSuite, FirstOrderLowPassX)
   Eigen::VectorXd u(ch); u.setZero();
   Eigen::VectorXd y(ch); y.setZero();
 
-  EXPECT_NO_FATAL_FAILURE( lpf.setStateFromLastIO(u,  y) );
+  EXPECT_TRUE( lpf.setStateFromLastIO(u,  y) );
   EXPECT_TRUE( eigen_utils::norm(lpf.getState()) < 1e-12 ) << "get: " + std::to_string(eigen_utils::norm(lpf.getState()));  
   EXPECT_TRUE( eigen_utils::norm(lpf.getInput()) < 1e-12 ) << "get: " + std::to_string(eigen_utils::norm(lpf.getInput()));  
   EXPECT_TRUE( eigen_utils::norm(lpf.getOutput()) < 1e-12 ) << "get: " + std::to_string(eigen_utils::norm(lpf.getOutput()));  
@@ -60,7 +60,7 @@ TEST(TestSuite, FirstOrderLowPass3)
   Eigen::VectorXd u(ch); u.setZero();
   Eigen::VectorXd y(ch); y.setZero();
 
-  EXPECT_NO_FATAL_FAILURE( lpf.setStateFromLastIO(u,  y) );
+  EXPECT_TRUE( lpf.setStateFromLastIO(u,  y) );
   EXPECT_TRUE( eigen_utils::norm(lpf.getOutput() - u) < 1e-12 ) << "get: " + std::to_string(eigen_utils::norm(lpf.getOutput() - u));
   u(0) = 1.0;
   for (unsigned int i=0;i<100000;i++)
@@ -84,7 +84,7 @@ TEST(TestSuite, FirstOrderLowPass1)
   double u = 0;
   double y = 0;
 
-  EXPECT_NO_FATAL_FAILURE( lpf.setStateFromLastIO(u,  y) );
+  EXPECT_TRUE( lpf.setStateFromLastIO(u,  y) );
   EXPECT_TRUE( eigen_utils::norm(lpf.getOutput() - u) < 1e-12 ) << "get: " + std::to_string(eigen_utils::norm(lpf.getOutput() - u));
   u = 1.0;
   for (unsigned int i=0;i<100000;i++)

@@ -270,12 +270,12 @@ public:
   /**
    * @brief Compute state from past inputs and outputs during a time window large as the state
    */
-  virtual void setStateFromIO(const InputWindow& past_inputs, const OutputWindow& past_outputs);
+  virtual bool setStateFromIO(const InputWindow& past_inputs, const OutputWindow& past_outputs);
   
   /**
    * @brief Compute state from input and the output
    */
-  void setStateFromLastIO(const Input& inputs, const Output& outputs);
+  bool setStateFromLastIO(const Input& inputs, const Output& outputs);
   
   /**
    * @brief update the system, to be called at each sampling iteration

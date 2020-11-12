@@ -353,7 +353,7 @@ inline void DiscreteStateSpace<S,I,O,MS,MI,MO>::setState(const DiscreteStateSpac
 }
 
 template< int S, int I, int O, int MS, int MI, int MO > 
-inline void DiscreteStateSpace<S,I,O,MS,MI,MO>::setStateFromIO(
+inline bool DiscreteStateSpace<S,I,O,MS,MI,MO>::setStateFromIO(
     const DiscreteStateSpace<S,I,O,MS,MI,MO>::InputWindow& past_inputs,
     const DiscreteStateSpace<S,I,O,MS,MI,MO>::OutputWindow& past_outputs)
 {
@@ -374,8 +374,21 @@ inline void DiscreteStateSpace<S,I,O,MS,MI,MO>::setStateFromIO(
    * ......
    * x(n) = A*x(n-1)+B*u(n-1)
    */
-  eigen_utils::checkInputDimAndThrowEx("Input Window", m_past_input, eigen_utils::rows(past_inputs), eigen_utils::cols(past_inputs));
-  eigen_utils::checkInputDimAndThrowEx("Output Window", m_past_output, eigen_utils::rows(past_outputs), eigen_utils::cols(past_outputs));
+  std::string error;
+  if(!eigen_utils::checkInputDim("Input Window", m_past_input, 
+                    eigen_utils::rows(past_inputs), eigen_utils::cols(past_inputs), error))
+  {
+    std::cerr<<__PRETTY_FUNCTION__<<":"<<__LINE__<<":" << "Error in checking the input window dimension." << std::endl;
+    std::cerr<< "\twhat():" << error << std::endl;
+    return false;
+  }
+  if(!eigen_utils::checkInputDim("Output Window", m_past_output, 
+    eigen_utils::rows(past_inputs), eigen_utils::cols(past_inputs), error))
+  {
+    std::cerr<<__PRETTY_FUNCTION__<<":"<<__LINE__<<":" << "Error in checking the input window dimension." << std::endl;
+    std::cerr<< "\twhat():" << error << std::endl;
+    return false;
+  }
   
   m_past_input = past_inputs;
   m_past_output = past_outputs;
@@ -390,23 +403,37 @@ inline void DiscreteStateSpace<S,I,O,MS,MI,MO>::setStateFromIO(
   
   for(int istep=0;istep<getOrder();istep++)  
   {
-    eigen_utils::copy_block(m_input, istep*getNumberOfInputs(),0,getNumberOfInputs(),1, m_past_input);
+    if(!eigen_utils::copy_from_block(m_input, m_past_input, istep*getNumberOfInputs(),0,getNumberOfInputs(),1))
+    {
+      std::cerr<<__PRETTY_FUNCTION__<<":"<<__LINE__<<":" << "Error in copying the past input in the input." << std::endl;
+      return false;
+    }
     update( m_input );
   }
 }
 
 template< int S, int I, int O, int MS, int MI, int MO > 
-inline void DiscreteStateSpace<S,I,O,MS,MI,MO>::setStateFromLastIO(const Input& inputs, const Output& outputs)
+inline bool DiscreteStateSpace<S,I,O,MS,MI,MO>::setStateFromLastIO(const Input& inputs, const Output& outputs)
 {
   eigen_utils::checkInputDimAndThrowEx("Inputs", m_input, eigen_utils::rows(inputs), eigen_utils::cols(inputs));
   eigen_utils::checkInputDimAndThrowEx("Outputs", m_output, eigen_utils::rows(outputs), eigen_utils::cols(outputs));
   
   for (unsigned int idx=0;idx<getOrder();idx++)
   {
-    eigen_utils::copy_block(m_past_input,  idx*getNumberOfInputs(), 0,getNumberOfInputs(), 1, inputs);
-    eigen_utils::copy_block(m_past_output, idx*getNumberOfOutputs(),0,getNumberOfOutputs(),1, outputs);
+    if(!eigen_utils::copy_to_block(m_past_input, inputs, idx*getNumberOfInputs(), 0,getNumberOfInputs(), 1))
+    {
+      std::cerr << __PRETTY_FUNCTION__<<":"<<__LINE__<<":" << "Error in copy inputs in the input window list (" 
+                << "idx=" <<idx <<" out of "<< getOrder()<<")" << std::endl;
+      return false;
+    }
+    if(!eigen_utils::copy_to_block(m_past_output, outputs, idx*getNumberOfOutputs(),0,getNumberOfOutputs(),1))
+    {
+      std::cerr << __PRETTY_FUNCTION__<<":"<<__LINE__<<":" << "Error in copy outputs in the output window list (" 
+                << "idx=" <<idx <<" out of "<< getOrder()<<")" << std::endl;
+      return false;
+    }
   }
-  setStateFromIO(m_past_input,m_past_output);
+  return setStateFromIO(m_past_input,m_past_output);
 }
 template< int S, int I, int O, int MS, int MI, int MO > inline 
 const typename DiscreteStateSpace<S,I,O,MS,MI,MO>::MatrixI2O& DiscreteStateSpace<S,I,O,MS,MI,MO>::computeInputToOutputMatrix()
@@ -414,9 +441,8 @@ const typename DiscreteStateSpace<S,I,O,MS,MI,MO>::MatrixI2O& DiscreteStateSpace
   eigen_utils::setZero(m_i2o);
   for (unsigned int idx=0;idx<getOrder();idx++)
   {
-    eigen_utils::copy_block(m_i2o,  
-        idx*getNumberOfOutputs(),idx*getNumberOfInputs(), getNumberOfOutputs(),getNumberOfInputs(), 
-        m_D);
+    eigen_utils::copy_to_block(m_i2o, m_D, 
+      idx*getNumberOfOutputs(),idx*getNumberOfInputs(), getNumberOfOutputs(),getNumberOfInputs());
   }
   
   MatrixA powA;
@@ -427,9 +453,8 @@ const typename DiscreteStateSpace<S,I,O,MS,MI,MO>::MatrixI2O& DiscreteStateSpace
   {
     for (unsigned int idx2=0;idx2<(getOrder()-idx);idx2++)
     {
-      eigen_utils::copy_block(m_i2o, 
-        (idx+idx2)*getNumberOfOutputs(),(idx2)*getNumberOfInputs(), getNumberOfOutputs(),getNumberOfInputs(), 
-        m_C*powA*m_B);
+      eigen_utils::copy_to_block(m_i2o, m_C*powA*m_B,
+        (idx+idx2)*getNumberOfOutputs(),(idx2)*getNumberOfInputs(), getNumberOfOutputs(),getNumberOfInputs());
     }
     powA*=m_A;
   }
@@ -448,7 +473,8 @@ inline const typename DiscreteStateSpace<S,I,O,MS,MI,MO>::MatrixObs&
   
   for (unsigned int idx=0;idx<getOrder();idx++)
   {
-    eigen_utils::copy_block(m_Obs, idx*getNumberOfOutputs(),0,getNumberOfOutputs(), getOrder(), m_C*pow_a);
+    eigen_utils::copy_to_block(m_Obs, m_C*pow_a, 
+      idx*getNumberOfOutputs(),0,getNumberOfOutputs(), getOrder());
     pow_a=pow_a*m_A;
   }
   
