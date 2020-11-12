@@ -410,6 +410,7 @@ inline bool DiscreteStateSpace<S,I,O,MS,MI,MO>::setStateFromIO(
     }
     update( m_input );
   }
+  return true;
 }
 
 template< int S, int I, int O, int MS, int MI, int MO > 
