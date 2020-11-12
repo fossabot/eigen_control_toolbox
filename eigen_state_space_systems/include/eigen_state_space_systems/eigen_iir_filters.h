@@ -1,6 +1,7 @@
 #ifndef   eigen_iir_filters_201805060814
 #define   eigen_iir_filters_201805060814
 
+#include <type_traits>
 #include <memory>
 #include <eigen_state_space_systems/eigen_state_space_systems.h>
 
@@ -21,6 +22,7 @@ template<int N, int MaxN = N>
 class FirstOrderLowPass: public DiscreteStateSpace<N,N,N,MaxN,MaxN,MaxN>
 {
 protected:
+  bool   initParam(const double& natural_frequency, const double& sampling_period);
   bool   computeMatrices();
   double m_natural_frequency;
   int    m_channels;
@@ -32,14 +34,20 @@ public:
 
   FirstOrderLowPass();
   virtual ~FirstOrderLowPass() = default;
-  FirstOrderLowPass(const double& natural_frequency, const double& sampling_period, const int& channels = N);
 
-  virtual bool init(const double& natural_frequency, const double& sampling_period, const int& channels = N);
+  template<int n=N, std::enable_if_t< n==-1, int> = 0>
+  FirstOrderLowPass(const double& natural_frequency, const double& sampling_period, const int& channels);
+
+  template<int n=N, std::enable_if_t< n!=-1 && n!=0, int> = 0>
+  FirstOrderLowPass(const double& natural_frequency, const double& sampling_period);
+
+  bool init(const double& natural_frequency, const double& sampling_period, const int& channels);
 
   [[deprecated("Use the Ctor, o the function 'init'. The dependency from ROS will be removed in the future")]]
   virtual bool importMatricesFromParam(const ros::NodeHandle& nh, const std::string& name);
 
-  double getNaturalFrequency(){return m_natural_frequency;};
+  double getNaturalFrequency()const {return m_natural_frequency;}
+  double getChannels() const {return m_channels;}
 };
 
 //!

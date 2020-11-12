@@ -38,22 +38,14 @@ target_link_libraries(test_state_space_matrix
                       ${Eigen_LIBRARIES}
 )
 
-add_executable(test_filters src/test_filters.cpp)
-add_dependencies(test_filters ${catkin_EXPORTED_TARGETS})
-target_link_libraries(test_filters
-#                       ${PROJECT_NAME}
-                      ${catkin_LIBRARIES}
-                      ${Eigen_LIBRARIES}
-)
 
-
-add_executable(        test_controllers src/test_pid.cpp)
-add_dependencies(      test_controllers ${catkin_EXPORTED_TARGETS})
-target_link_libraries( test_controllers
-#                       ${PROJECT_NAME}
-                      ${catkin_LIBRARIES}
-                      ${Eigen_LIBRARIES}
-)
+# add_executable(        test_controllers src/test_pid.cpp)
+# add_dependencies(      test_controllers ${catkin_EXPORTED_TARGETS})
+# target_link_libraries( test_controllers
+# #                       ${PROJECT_NAME}
+#                       ${catkin_LIBRARIES}
+#                       ${Eigen_LIBRARIES}
+#)
 
 # Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/
@@ -69,11 +61,15 @@ if(CATKIN_ENABLE_TESTING)
   add_rostest_gtest(filtered_values_test test/filtered_values_test.launch test/filtered_values_test.cpp)
   target_link_libraries(filtered_values_test ${catkin_LIBRARIES} ${rostest_LIBRARIES} )
 
+  add_rostest_gtest(test_filters test/test_filters.launch test/test_filters.cpp)
+  add_dependencies(test_filters ${catkin_EXPORTED_TARGETS})
+  target_link_libraries(test_filters ${catkin_LIBRARIES} ${Eigen_LIBRARIES} ${rostest_LIBRARIES})
+
   if(ENABLE_COVERAGE_TESTING)
     set(COVERAGE_EXCLUDES "*/${PROJECT_NAME}/test*")
     add_code_coverage(
-      NAME filtered_values_test_coverage_report
-      DEPENDENCIES filtered_values_test
+      NAME coverage_report
+      DEPENDENCIES filtered_values_test test_filters
     )
   endif()
 endif()

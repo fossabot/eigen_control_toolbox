@@ -5,9 +5,23 @@
 <arg     if="$(arg debug)" name="launch_prefix"
      value="valgrind -v --track-origins=yes --tool=memcheck --leak-check=full --show-reachable=yes  --num-callers=20 --track-fds=yes  --log-file=/home/feymann/a.txt" />
 
-  <!-- value="gdb - ex run - args" /> -->
+<rosparam>
+  test_wrong:
+    natural_frequency: -1.0
+    frequency: 1
+    sample_period: 1
+    channels: 3
+</rosparam>
 
-<test launch-prefix="$(arg launch_prefix)" test-name="test" pkg="eigen_state_space_systems" type="filtered_values_test" >
+<rosparam>
+  test:
+    frequency: 1
+    sample_period: 1
+    channels: 6
+</rosparam>
+
+<test launch-prefix="$(arg launch_prefix)" test-name="test" pkg="eigen_state_space_systems" type="test_filters" >
+
 </test>
 
 

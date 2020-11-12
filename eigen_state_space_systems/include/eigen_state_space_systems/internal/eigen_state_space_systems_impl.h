@@ -333,8 +333,7 @@ inline typename DiscreteStateSpace<S,I,O,MS,MI,MO>::Output&
   }
 
   eigen_utils::checkInputDimAndThrowEx("Input", m_input, eigen_utils::rows(input), 1);
-
-  m_input  = input; 
+  m_input  = input;  
   m_output = m_C*m_state + m_D*m_input;
   m_state  = m_A*m_state + m_B*m_input;
   return m_output;

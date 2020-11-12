@@ -38,6 +38,9 @@
 #include <eigen_matrix_utils/eigen_matrix_utils.h>
 #include <eigen_state_space_systems/filtered_values.h>
 #include <gtest/gtest.h>
+#include <cstdlib>
+#include <ctime>
+
 
 // Declare a test
 TEST(TestSuite, FilteredScalar)
@@ -144,7 +147,6 @@ TEST(TestSuite, FilteredVectorXd)
 
   EXPECT_TRUE( fv.value(0) == vv ); 
   // ======================
-  
 }
 
 
@@ -175,14 +177,29 @@ TEST(TestSuite, FilteredVector2d)
   EXPECT_TRUE( fv2.value().rows() == N );
   EXPECT_TRUE( fv2.value().rows() != y.rows() );
   
+  // ======================
   EXPECT_NO_FATAL_FAILURE( fv2.activateFilter ( d, d, 0.1, 1e-3, d) );
   EXPECT_ANY_THROW( fv2.value() = d );
-  
-  EXPECT_NO_FATAL_FAILURE( fv2.deactivateFilter(  ) );
-  
-  EXPECT_NO_FATAL_FAILURE( fv2.value() = d );
-  EXPECT_TRUE( fv2.value().norm() == d.norm() );
 
+  // if filter activated, you cannot direct assign the value, 
+  // you must use "update"
+  // Specifically, the value() method throw an exception when the filter is activated 
+  EXPECT_ANY_THROW( int rows = fv2.value().rows()) << "Getting the row() is not a const operator, sigh";
+
+  EXPECT_NO_FATAL_FAILURE( fv2.update(d) );
+  EXPECT_NO_FATAL_FAILURE( d = fv2.getUpdatedValue( ) );
+  // ======================
+
+  // ======================
+  EXPECT_NO_FATAL_FAILURE( fv2.deactivateFilter(  ) );
+  EXPECT_NO_FATAL_FAILURE( fv2.value() = d );
+  EXPECT_ANY_THROW( fv2.update(d) );
+  EXPECT_ANY_THROW( d = fv2.getUpdatedValue( ) );
+  EXPECT_TRUE( fv2.value().norm() == d.norm() );
+  // ======================
+  
+  // ACCESSORS
+  // ======================
   EXPECT_NO_FATAL_FAILURE( d = fv2.value() );
   EXPECT_TRUE( fv2.value().norm() == d.norm() );
   
@@ -202,6 +219,132 @@ TEST(TestSuite, FilteredVector2d)
   *ptr = vv;
 
   EXPECT_TRUE( fv2.value(0) == vv ); 
+// ======================
+}
+
+// Declare a test
+TEST(TestSuite, FilteredScalarPerformance)
+{
+  eigen_control_toolbox::FilteredScalar fv;
+  double d = 1;
+
+  std::srand(std::time(NULL));
+
+  // ======================
+  fv.activateFilter ( d, d, 0.1, 1e-3, d);
+  
+  for(size_t i=0;i<10000; i++)
+  {
+    //d = std::rand() / RAND_MAX;
+    fv.update(d);
+  }
+  // ======================
+}
+
+TEST(TestSuite, FilteredVectorXdPerformance)
+{
+  eigen_control_toolbox::FilteredVectorXd fv;
+  Eigen::Matrix<double, 2,1> d;
+  d << 1,2;
+
+  // ======================
+  fv.activateFilter ( d, d, 0.1, 1e-3, d);
+  
+  for(size_t i=0;i<10000; i++)
+  {
+    //d.setRandom();
+    fv.update(d);
+  }
+  // ======================
+}
+
+// Declare a test
+TEST(TestSuite, FilteredVector2dPerformance)
+{
+  eigen_control_toolbox::FilteredVector2d fv;
+  Eigen::Matrix<double, 2,1> d;
+  d << 1,2;
+
+  // ======================
+  fv.activateFilter ( d, d, 0.1, 1e-3, d);
+  
+  for(size_t i=0;i<10000; i++)
+  {
+    //d.setRandom();
+    fv.update(d);
+  } 
+  // ======================
+}
+
+
+TEST(TestSuite, FilteredVector6XdPerformance)
+{
+  eigen_control_toolbox::FilteredVectorXd fv;
+  Eigen::Matrix<double, 6,1> d;
+  d << 1,2,3,4,5,6;
+
+  // ======================
+  fv.activateFilter ( d, d, 0.1, 1e-3, d);
+  
+  for(size_t i=0;i<10000; i++)
+  {
+    //d.setRandom();
+    fv.update(d);
+  }
+  // ======================
+}
+
+// Declare a test
+TEST(TestSuite, FilteredVector6dPerformance)
+{
+  eigen_control_toolbox::FilteredVector6d fv;
+  Eigen::Matrix<double, 6,1> d;
+  d << 1,2,3,4,5,6;
+
+  // ======================
+  fv.activateFilter ( d, d, 0.1, 1e-3, d);
+  
+  for(size_t i=0;i<100000; i++)
+  {
+    //d.setRandom();
+    fv.update(d);
+  } 
+  // ======================
+}
+
+TEST(TestSuite, FilteredVector6XPtrdPerformance)
+{
+  eigen_control_toolbox::FilteredVectorXdPtr fv(new eigen_control_toolbox::FilteredVectorXd());
+  Eigen::Matrix<double, 6,1> d;
+  d << 1,2,3,4,5,6;
+
+  // ======================
+  fv->activateFilter ( d, d, 0.1, 1e-3, d);
+  
+  for(size_t i=0;i<100000; i++)
+  {
+    //d.setRandom();
+    fv->update(d);
+  }
+  // ======================
+}
+
+// Declare a test
+TEST(TestSuite, FilteredVector6dPtrPerformance)
+{
+  eigen_control_toolbox::FilteredVector6dPtr fv(new eigen_control_toolbox::FilteredVector6d());
+  Eigen::Matrix<double, 6,1> d;
+  d << 1,2,3,4,5,6;
+
+  // ======================
+  fv->activateFilter ( d, d, 0.1, 1e-3, d);
+  
+  for(size_t i=0;i<100000; i++)
+  {
+    //d.setRandom();
+    fv->update(d);
+  } 
+  // ======================
 }
 
 
@@ -209,7 +352,5 @@ TEST(TestSuite, FilteredVector2d)
 int main(int argc, char **argv)
 {
   testing::InitGoogleTest(&argc, argv);
-  ros::init(argc, argv, "cnr_logger_tester");
-  ros::NodeHandle nh;
   return RUN_ALL_TESTS();
 }

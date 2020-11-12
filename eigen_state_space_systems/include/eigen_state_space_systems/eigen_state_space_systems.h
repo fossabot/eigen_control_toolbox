@@ -239,6 +239,9 @@ public:
   //! accessor
   const MatrixD& getDMatrix() const {return m_D;};
 
+//! accessor to last input
+  const Input&  getInput()  const {return m_input;};
+
   //! accessor to last comupted output
   const Output&  getOutput()  const {return m_output;};
 

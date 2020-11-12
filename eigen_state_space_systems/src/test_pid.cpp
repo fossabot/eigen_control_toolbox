@@ -1,6 +1,20 @@
+
+
+#include <iostream>
 #include <ros/ros.h>
+#include <eigen_matrix_utils/eigen_matrix_utils.h>
+#include <eigen_state_space_systems/filtered_values.h>
 #include <eigen_state_space_systems/eigen_controllers.h>
-#include <ros/console.h>
+#include <gtest/gtest.h>
+#include <cstdlib>
+#include <ctime>
+
+
+// Declare a test
+TEST(TestSuite, FilteredScalar)
+{
+}
+
 
 int main(int argc,char** argv)
 {

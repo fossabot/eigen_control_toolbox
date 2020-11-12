@@ -49,17 +49,17 @@ public:
   const Value& raw() const;
   Value& raw();
 
-  // conditional template, if n==1, it is a simple double, otherwise, 
+  // conditional template, if n==1, it is a simple double, otherwise,
   // access to data() of the matrix
   template <int n=N, typename std::enable_if<n==1, int>::type = 0>
   const double* data() const;
 
   template <int n=N, typename std::enable_if<n!=1, int>::type = 0>
   const double* data() const;
-  
+
   template <int n=N, typename std::enable_if<n==1, int>::type = 0>
   double* data();
-  
+
   template <int n=N, typename std::enable_if<n!=1, int>::type = 0>
   double* data();
 
@@ -73,13 +73,13 @@ public:
 
   template <int n=N, typename std::enable_if<n!=1, int>::type = 0>
   double& value(const int iAx);
-  
+
   template <int n=N, typename std::enable_if<n!=1, int>::type = 0>
   const double* data(const int iAx) const;
 
   template <int n=N, typename std::enable_if<n!=1, int>::type = 0>
   double* data(const int iAx);
-  
+
   template <int n=N, typename std::enable_if<n!=1, int>::type = 0>
   bool resize(int nAx);
 

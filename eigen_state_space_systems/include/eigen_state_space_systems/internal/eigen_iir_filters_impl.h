@@ -1,8 +1,8 @@
 #ifndef   eigen_iir_filters_impl_201811280954
 #define   eigen_iir_filters_impl_201811280954
 
+#include <type_traits>
 #include <eigen_state_space_systems/eigen_iir_filters.h>
-
 
 namespace eigen_control_toolbox
 {
@@ -105,6 +105,7 @@ inline FirstOrderLowPass<N,MaxN>::FirstOrderLowPass()
 }
 
 template<int N, int MaxN>
+template<int n, std::enable_if_t< n==-1, int> >
 inline FirstOrderLowPass<N,MaxN>::FirstOrderLowPass(const double& natural_frequency,
                                                     const double& sampling_period,
                                                     const int&    channels)
@@ -117,22 +118,51 @@ inline FirstOrderLowPass<N,MaxN>::FirstOrderLowPass(const double& natural_freque
 }
 
 template<int N, int MaxN>
+template<int n, std::enable_if_t< n!=-1&& n!=0, int> >
+inline FirstOrderLowPass<N,MaxN>::FirstOrderLowPass(const double& natural_frequency,
+                                                    const double& sampling_period)
+{
+  if(!init(natural_frequency, sampling_period, N))
+  {
+    throw std::runtime_error(
+      ("Error in the ctor of the FirstOrderLowPass<N,MaxN> with N=" + std::to_string(N)).c_str());
+  }
+}
+
+template<int N, int MaxN>
 inline bool FirstOrderLowPass<N,MaxN>::init(const double& natural_frequency, const double& sampling_period, const int& channels)
 {
-  if((N==-1)&&(channels==-1)) 
+  if(!initParam(natural_frequency, sampling_period))
+  {
+    return false;
+  }  
+
+  int ch = channels;
+  if((N==-1)&&(channels<1))
   {
     std::cerr << __PRETTY_FUNCTION__ <<":" << __LINE__ << ":" << 
           "The dimension of the filter is undefined, and it is not solved by the input argument 'channels'. Abort." 
               << std::endl;
     return false;
   }
-  else if((N>0)&&(channels!=N)) 
+  else if((N!=-1)&&(channels!=N))
   {
     std::cerr << __PRETTY_FUNCTION__ <<":" << __LINE__ << ":" << 
-          "The input dimension differ from the templated dimension. The input dimension will be ignored." 
+          "The templated dimension of the filter mismatch with the input argument. Input argument 'channels' is ignored." 
               << std::endl;
+    ch = N;
   }
-  else if(sampling_period<=0)
+  
+  this->m_channels = ch;
+  
+  return computeMatrices();
+}
+
+
+template<int N, int MaxN>
+inline bool FirstOrderLowPass<N,MaxN>::initParam(const double& natural_frequency, const double& sampling_period)
+{
+  if(sampling_period<=0)
   {
     std::cerr << __PRETTY_FUNCTION__ <<":" << __LINE__ << ":" << 
           "The sampling periodcannot be less than or equal to zero ." 
@@ -153,14 +183,10 @@ inline bool FirstOrderLowPass<N,MaxN>::init(const double& natural_frequency, con
               << std::endl;
     return false;
   }
-  
   this->m_natural_frequency=natural_frequency;
   this->m_sampling_period=sampling_period;
-  this->m_channels = N > 0 ? N : channels;
-
-  return computeMatrices();
+  return true;
 }
-
 
 template<int N, int MaxN>
 inline bool FirstOrderLowPass<N,MaxN>::computeMatrices()
@@ -172,7 +198,7 @@ inline bool FirstOrderLowPass<N,MaxN>::computeMatrices()
   
   A.setIdentity();
   B.setIdentity();
-  B.setIdentity();
+  C.setIdentity();
   D.setZero();
 
   // xn=coef*x+(1-coef)*u
