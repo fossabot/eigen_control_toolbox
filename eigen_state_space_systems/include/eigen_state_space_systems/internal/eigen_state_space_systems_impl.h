@@ -96,6 +96,7 @@ namespace eigen_utils
     if(!eigen_utils::resize(lhs, rhs.rows(),  rhs.cols()))
       return false;
     lhs = rhs;
+    return true;
   }
 
   // matrix, double
@@ -116,7 +117,7 @@ namespace eigen_utils
             const Eigen::MatrixBase<InputDerived>& rhs,
             Eigen::MatrixBase<OutputDerived>& x)
   {
-    Eigen::JacobiSVD< Derived > svd(m, Eigen::ComputeThinU | Eigen::ComputeThinV);
+    Eigen::JacobiSVD< Eigen::MatrixXd > svd(m, Eigen::ComputeThinU | Eigen::ComputeThinV);
     if(svd.rank()<m.cols())
     {
       return false;
@@ -125,9 +126,9 @@ namespace eigen_utils
     return true;
   }
 
-  inline bool svd( const double& m, 
-            const double& rhs,
-            double&       x)
+  inline bool svd(const double& m, 
+                  const double& rhs,
+                  double&       x)
   {
     x = rhs; // state at the begin of initialization interval
     return true;
@@ -325,14 +326,15 @@ inline bool DiscreteStateSpace<S,I,O,MS,MI,MO>::setMatrices(
 
 template< int S, int I, int O, int MS, int MI, int MO > 
 inline typename DiscreteStateSpace<S,I,O,MS,MI,MO>::Output& 
-  DiscreteStateSpace<S,I,O,MS,MI,MO>::update(const DiscreteStateSpace<S,I,O,MS,MI,MO>::Input& input)
+  DiscreteStateSpace<S,I,O,MS,MI,MO>::update(const DiscreteStateSpace<S,I,O,MS,MI,MO>::Input& input, bool skip_dimension_check)
 {
   if(!DiscreteStateSpace<S,I,O,MS,MI,MO>::initialized())
   {
     throw std::runtime_error("The Discrete State Space has not been yet initialized (i.e., the matrices are undefined). Abort.");  
   }
 
-  eigen_utils::checkInputDimAndThrowEx("Input", m_input, eigen_utils::rows(input), 1);
+  if(!skip_dimension_check)
+    eigen_utils::checkInputDimAndThrowEx("Input", m_input, eigen_utils::rows(input), 1);
   m_input  = input;  
   m_output = m_C*m_state + m_D*m_input;
   m_state  = m_A*m_state + m_B*m_input;

@@ -60,6 +60,7 @@ if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
   add_rostest_gtest(filtered_values_test test/test_filtered_values.launch test/test_filtered_values.cpp)
   target_link_libraries(filtered_values_test ${catkin_LIBRARIES} ${rostest_LIBRARIES} )
+  target_compile_options(filtered_values_test PUBLIC $<$<CONFIG:Release>:-Ofast -march=native>)
 
   add_rostest_gtest(test_filters test/test_filters.launch test/test_filters.cpp)
   add_dependencies(test_filters ${catkin_EXPORTED_TARGETS})

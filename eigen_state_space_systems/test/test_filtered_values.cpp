@@ -33,13 +33,16 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <cstdlib>
+#include <ctime>
 #include <iostream>
+
+#include <gtest/gtest.h>
+#include <gtest/gtest-death-test.h>
+
 #include <ros/ros.h>
 #include <eigen_matrix_utils/eigen_matrix_utils.h>
 #include <eigen_state_space_systems/filtered_values.h>
-#include <gtest/gtest.h>
-#include <cstdlib>
-#include <ctime>
 
 
 // Declare a test
@@ -168,10 +171,13 @@ TEST(TestSuite, FilteredVector2d)
   EXPECT_NO_FATAL_FAILURE( fv2.value() = d ) << "The Eigen underlay equality fail if dimensions are different";
   EXPECT_TRUE( fv2.value().norm() == d.norm() );
 
-  EXPECT_NO_FATAL_FAILURE( fv2.value() = x );
-  EXPECT_TRUE( (fv2.value()- x).norm() == 0 );
+#if NDEBUG == 0
+  EXPECT_DEATH( fv2.value() = x, "") 
+    << "If compiled in debug, there is an assert that check the dimension. x is of dimension 1, while fv2 is of dimension2";
   
-  EXPECT_NO_FATAL_FAILURE( fv2.value() = y ) << "The Eigen underlay equality fail if dimensions are different";
+  EXPECT_DEATH( fv2.value() = y, "" ) 
+    << "If compiled in debug, there is an assert that check the dimension. x is of dimension 1, while fv2 is of dimension2";
+#endif
   EXPECT_TRUE( eigen_utils::rows(fv2.value()) == N );
   EXPECT_TRUE( eigen_utils::rows(fv2.value()) != y.rows() );
   EXPECT_TRUE( fv2.value().rows() == N );

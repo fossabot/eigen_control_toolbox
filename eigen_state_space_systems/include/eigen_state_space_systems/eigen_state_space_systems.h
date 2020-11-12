@@ -284,7 +284,7 @@ public:
    * @return output The type of the input is an Eigen::Matrix<double,I,1> if I is different from 1
    *              while is a 'doube' if I is equal to 1
    */
-  virtual Output& update(const Input& input);
+  virtual Output& update(const Input& input, bool skip_dimension_check = true);
   
   //! @brief compute the observability matrix
   const MatrixObs& computeObservatibilityMatrix( );

@@ -84,7 +84,8 @@ public:
   bool resize(int nAx);
 
 protected:
-  bool filter_active_;
+  bool   filter_active_;
+  bool   first_update_;
   double natural_frequency_;
   double sampling_time_;
 
