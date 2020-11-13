@@ -2,7 +2,7 @@
 
 ## CI/CD ##
 
-| service   |  Master                                                                                                                                                                                                                                                                  |
+| service   |  Nicola                                                                                                                                                                                                                                                                  |
 |:----------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
 | Travis    | [![Build Status](https://travis-ci.org/CNR-STIIMA-IRAS/eigen_control_toolbox.svg?branch=nicola)](https://travis-ci.org/CNR-STIIMA-IRAS/eigen_control_toolbox)                                                                                                                                  |
 | Codecov   | [![codecov](https://codecov.io/gh/CNR-STIIMA-IRAS/eigen_control_toolbox/branch/nicola/graph/badge.svg)](https://codecov.io/gh/CNR-STIIMA-IRAS/eigen_control_toolbox)                                                                                                                           | 
@@ -11,23 +11,21 @@
 
 ## Aim ##
 
-# eigen_state_space_systems #
-
 eigen_state_space_systems is an Eigen implementation of a discrete state space linear system, including special case like: low- and high-pass first-order filters.
 
 ## DiscreteStateSpace is generic discrete state space linear system. 
 
-> x state
+```c+++
+x state
+y output
 
-> y output
+u input
 
-> u input
+k actual step
 
-> k actual step
-
-> y(k)=C*x(k)+D*u(k)
-
-> x(k+1)=A*x(k)+B*u(k)
+y(k)=C*x(k)+D*u(k)
+x(k+1)=A*x(k)+B*u(k)
+```
 
 # BASIC USAGE 
 
