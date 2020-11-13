@@ -27,8 +27,16 @@ y(k)=C*x(k)+D*u(k)
 x(k+1)=A*x(k)+B*u(k)
 ```
 
-# BASIC USAGE 
+## Package Oroganization ##
 
+## Classes Available ##
+
+
+# Discrete State Space Systems #
+
+## USAGE ##
+
+### Basic Usage ###
 ```c+++
 #include <eigen_state_space_systems/eigen_state_space_systems.h>
 ```
@@ -66,8 +74,7 @@ x(k+1)=A*x(k)+B*u(k)
   y=ss.update(u); // computing one step, updating state and output
 ```
 
-
-# BASIC USAGE LOADING MATRICES FROM PARAM
+### Loading the Matrices from Param ###
 
 ```c+++
 #include <eigen_state_space_systems/eigen_state_space_systems.h>
@@ -118,14 +125,15 @@ ss:
   - [0]  
 ```
 
-## FirstOrderLowPass and FirstOrderHighPass are low-pass and high-pass first-order filters. 
+# FirstOrderLowPass and FirstOrderHighPass are low-pass and high-pass first-order filters #
 
-> Low-pass filter: discretized version of 1/(tau*s+1)
+```cpp
+Low-pass filter: discretized version of 1/(tau*s+1)
+High-pass filter: discretized version of tau*s/(tau*s+1)
+```
 
-> High-pass filter: discretized version of tau*s/(tau*s+1)
 
-
-# BASIC USAGE 
+## Usage ##
 
 ```c+++
 #include <eigen_state_space_systems/eigen_common_filters.h>
@@ -148,7 +156,7 @@ ss:
    
 ```
 
-# LOAD FROM ROS PARAM
+### Load from params ###
 you can load from param with the command:
 
 ```c+++
@@ -173,7 +181,7 @@ _Copyright (c) 2010, National Research Council of Italy, Institute of Intelligen
 _All rights reserved._
 
 
-### Contribution guidelines ###
+## Contribution guidelines ##
 
 ### Contact ###
 
