@@ -4,88 +4,176 @@
 
 | service   |  Master                                                                                                                                                                                                                                                                  |
 |:----------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
-| Travis    | [![Build Status](https://travis-ci.org/CNR-STIIMA-IRAS/eigen_control_toolbox.svg?branch=master)](https://travis-ci.org/CNR-STIIMA-IRAS/eigen_control_toolbox)                                                                                                                                  |
-| Codecov   | [![codecov](https://codecov.io/gh/CNR-STIIMA-IRAS/eigen_control_toolbox/branch/master/graph/badge.svg)](https://codecov.io/gh/CNR-STIIMA-IRAS/eigen_control_toolbox)                                                                                                                           | 
+| Travis    | [![Build Status](https://travis-ci.org/CNR-STIIMA-IRAS/eigen_control_toolbox.svg?branch=nicola)](https://travis-ci.org/CNR-STIIMA-IRAS/eigen_control_toolbox)                                                                                                                                  |
+| Codecov   | [![codecov](https://codecov.io/gh/CNR-STIIMA-IRAS/eigen_control_toolbox/branch/nicola/graph/badge.svg)](https://codecov.io/gh/CNR-STIIMA-IRAS/eigen_control_toolbox)                                                                                                                           | 
 | Codacy    | [![Codacy Badge](https://api.codacy.com/project/badge/Grade/7f1834c02aa84b959ee9b7529deb48d6)](https://app.codacy.com/gh/CNR-STIIMA-IRAS/eigen_control_toolbox?utm_source=github.com&utm_medium=referral&utm_content=CNR-STIIMA-IRAS/eigen_control_toolbox&utm_campaign=Badge_Grade_Dashboard) | 
 | Fossa     | [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FCNR-STIIMA-IRAS%2Feigen_control_toolbox.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FCNR-STIIMA-IRAS%2Feigen_control_toolbox?ref=badge_shield)                                                   |
 
 ## Aim ##
 
-The package has been designed to 
+# eigen_state_space_systems #
 
-## Usage ##
+eigen_state_space_systems is an Eigen implementation of a discrete state space linear system, including special case like: low- and high-pass first-order filters.
 
-### Dependencies ###
+## DiscreteStateSpace is generic discrete state space linear system. 
 
+> x state
 
+> y output
 
-### Parameters ###
+> u input
 
-```yaml
-  ~/appenders: ['file', 'screen']                 # Mandatory
-                                                  # A vector od dimension 1 or 2, where you can select if the output will be streamed to file, to screen or to both
-                                                  # (the order in the vector is not important)
+> k actual step
 
-  ~/levels: [ debug|info|warn|error|fatal, ..]    # Optional
-                                                  # A vector where you can select the verbosity level for each appender.
-                                                  # If not present, or if the size of the vector is different from the dimension of the appenders,
-                                                  # the default value is superimposed.
-                                                  # Default: 'debug' for all the appenders
+> y(k)=C*x(k)+D*u(k)
 
-  ~/pattern_layout: '...'                         # Optional
-                                                  # look at https://svn.apache.org/repos/asf/logging/site/trunk/docs/log4cxx/apidocs/classlog4cxx_1_1_pattern_layout.html"
-                                                  # This allows you to define the log pattern.
-                                                  # Default is: [%5p] [%d{HH:mm:ss,SSS}][%r][%M:%L]: %m%n
+> x(k+1)=A*x(k)+B*u(k)
 
-  ~/file_name: 'file_name'                        # Optional
-                                                  # If 'file' is selected, this is the path of the log file.
-                                                  # If any absolute path is indicated it saves under the default location.
-                                                  # Default: ~/.ros/log/[logger_id].log
+# BASIC USAGE 
 
-  ~/append_date_to_file_name: true|false          # Optional
-                                                  # The named file will be appended with the YYMMDD-HH:MM::SS of creation
-                                                  # Default: false
-
-  ~/append_to_file: true|false                    # Optional
-                                                  # If true, the content is appended to file. The new content starts with a clear header (with data and start time).
-                                                  # If not, the log file is overwritten.
-                                                  # Default: true
+```c+++
+#include <eigen_state_space_systems/eigen_state_space_systems.h>
 ```
 
-### Class initialization and usage ###
+```c++
 
-There are two constructors:
-
-```cpp
-TraceLogger( const std::string& logger_id )
-TraceLogger( const std::string& logger_id, const std::string& param_namespace, const bool star_header )
-```
-
-The first does not initialize the instance of the class, and the function `init()` must be called afterwards.
-The second initializes the instance of the class.
-
-If the initialization failed, the class superimpose default values unless the user explicitly indicates to not use the default values.
-
-#### Example of usage ####
-
-```cpp
+  unsigned int order=10; // system order
+  unsigned int nin=1;    // number of inputs
+  unsigned int nout=1;   // number of outputs
   
+  Eigen::MatrixXd A(order,order);
+  Eigen::MatrixXd B(order,nin);
+  Eigen::MatrixXd C(nout,order);
+  Eigen::MatrixXd D(nout,nin);
+  
+  A.setRandom();
+  B.setRandom();
+  C.setRandom();
+  D.setRandom();
+  
+ 
+  eigen_control_toolbox::DiscreteStateSpace ss(A,B,C,D);
+
+  
+  Eigen::VectorXd u(nin);   //input vector
+  Eigen::VectorXd y(nout);  //output vector
+  
+  u.setRandom();
+  y.setRandom();
+  
+  ss.setStateFromLastIO(u,y); // initialize initial state value for dumpless startup 
+  ROS_INFO_STREAM("state:\n"<<ss.getState());
+  ROS_INFO_STREAM("output:\n"<<ss.getOutput() << "\ndesired:\n"<<y);
+  
+  y=ss.update(u); // computing one step, updating state and output
 ```
 
-#### Utilities with the package ####
 
-The ANSI Colors are defined as an inline function
+# BASIC USAGE LOADING MATRICES FROM PARAM
 
-```cpp
-
+```c+++
+#include <eigen_state_space_systems/eigen_state_space_systems.h>
 ```
 
-The macros to be used within the code are:
+```c++
 
-```cpp
+  unsigned int order=10; // system order
+  unsigned int nin=1;    // number of inputs
+  unsigned int nout=1;   // number of outputs
+  
+  
+ 
+  eigen_control_toolbox::DiscreteStateSpace ss;
+  if (!ss.importMatricesFromParam(nh,"ss")) // reading matrices from ss parameter (see below)
+  {
+    ROS_ERROR("error");
+    return -1;
+  }
+  
 
-#define CNR_RETURN_NOTOK_THROTTLE( logger, var, period, ...)
+  
+  Eigen::VectorXd u(nin);   //input vector
+  Eigen::VectorXd y(nout);  //output vector
+  
+  u.setRandom();
+  y.setRandom();
+  
+  ss.setStateFromLastIO(u,y); // initialize initial state value for dumpless startup 
+  ROS_INFO_STREAM("state:\n"<<ss.getState());
+  ROS_INFO_STREAM("output:\n"<<ss.getOutput() << "\ndesired:\n"<<y);
+  
+  y=ss.update(u); // computing one step, updating state and output
 ```
+
+Required parameters:
+```yaml
+ss:
+  A:
+  - [0, 1]
+  - [0, 0]
+  B:
+  - [0]
+  - [1]
+  C:
+  - [1, 0]
+  D:
+  - [0]  
+```
+
+## FirstOrderLowPass and FirstOrderHighPass are low-pass and high-pass first-order filters. 
+
+> Low-pass filter: discretized version of 1/(tau*s+1)
+
+> High-pass filter: discretized version of tau*s/(tau*s+1)
+
+
+# BASIC USAGE 
+
+```c+++
+#include <eigen_state_space_systems/eigen_common_filters.h>
+```
+
+```c++
+
+  double natural_frequency = 500; // [rad/s]
+  double sampling_period=0.001; // s
+  eigen_control_toolbox::FirstOrderLowPass lpf(natural_frequency,sampling_period); // the same for FirstOrderHighPass
+
+  // initialization
+  double u=0;
+  double y=0;
+  lpf.setStateFromLastIO(u,  y);
+
+  // computing one step
+  u=1;
+  y=lpf.update(u);
+   
+```
+
+# LOAD FROM ROS PARAM
+you can load from param with the command:
+
+```c+++
+eigen_control_toolbox::FirstOrderLowPass lpf;
+lpf.importMatricesFromParam(nh,"/filter"); 
+```
+
+The ROS parameter can be equal to:
+```yaml
+filter:
+  frequency: 5 # [Hz]
+  sampling_period: 0.01 # [s]
+```
+or equal to:
+```yaml
+filter:
+  natural_frequency: 2 # [rad/s]
+  sampling_period: 0.01 # [s]
+```
+_Software License Agreement (BSD License)_    
+_Copyright (c) 2010, National Research Council of Italy, Institute of Intelligent Industrial Technologies and Systems for Advanced Manufacturing_    
+_All rights reserved._
+
 
 ### Contribution guidelines ###
 
