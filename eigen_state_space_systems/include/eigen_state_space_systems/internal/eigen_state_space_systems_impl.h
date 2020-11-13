@@ -150,14 +150,14 @@ namespace eigen_control_toolbox
  * The function is deprecated, in the future, the ROS dependecy from the library will be removed.
  */
 inline 
-bool BaseDiscreteStateSpace::importMatricesFromParam( const ros::NodeHandle&  nh, 
-                              const std::string&      name)
+bool BaseDiscreteStateSpace::importMatricesFromParam(const ros::NodeHandle&  nh, 
+                                                     const std::string&      name)
 {
   Eigen::MatrixXd A,B,C,D;
   std::string what;
   if(!eigen_control_toolbox::importMatricesFromParam(nh, name, A,B,C,D,what))
   {
-    std::cerr << __PRETTY_FUNCTION__ <<":"<<__LINE__<<":" << what << std::endl;
+    std::cerr << __PRETTY_FUNCTION__ <<":"<<__LINE__<<": what():\n" << what << std::endl;
     return false;
   }
 
@@ -192,6 +192,15 @@ inline bool importMatricesFromParam(const ros::NodeHandle&  nh,
                                     std::string&            what)
 {
   std::string type;
+  if(!nh.hasParam(name))
+  {
+      if(name.rfind("/") == 0)
+        what = "The param '" +name + "' is not in ros param server";
+      else
+        what = "The param '" + nh.getNamespace() + "/" + name + "' is not in ros param server";
+      return false;
+  }
+
   if (nh.hasParam(name+"/type"))
   {
     if (!nh.getParam(name+"/type",type))

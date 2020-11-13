@@ -44,6 +44,7 @@
 #include <eigen_matrix_utils/eigen_matrix_utils.h>
 #include <eigen_state_space_systems/filtered_values.h>
 
+constexpr size_t cycles = 1e6;
 
 // Declare a test
 TEST(TestSuite, FilteredScalar)
@@ -310,7 +311,7 @@ TEST(TestSuite, FilteredVector6dPerformance)
   // ======================
   fv.activateFilter ( d, d, 0.1, 1e-3, d);
   
-  for(size_t i=0;i<100000; i++)
+  for(size_t i=0;i<cycles; i++)
   {
     //d.setRandom();
     fv.update(d);
@@ -327,7 +328,7 @@ TEST(TestSuite, FilteredVector6XPtrdPerformance)
   // ======================
   fv->activateFilter ( d, d, 0.1, 1e-3, d);
   
-  for(size_t i=0;i<100000; i++)
+  for(size_t i=0;i<cycles; i++)
   {
     //d.setRandom();
     fv->update(d);
@@ -345,7 +346,7 @@ TEST(TestSuite, FilteredVector6dPtrPerformance)
   // ======================
   fv->activateFilter ( d, d, 0.1, 1e-3, d);
   
-  for(size_t i=0;i<100000; i++)
+  for(size_t i=0;i<cycles; i++)
   {
     //d.setRandom();
     fv->update(d);

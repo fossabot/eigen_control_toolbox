@@ -31,21 +31,6 @@ include_directories(
   ${EIGEN3_INCLUDE_DIRS}
 )
 
-add_executable(test_state_space_matrix src/test_state_space_matrix.cpp)
-add_dependencies(test_state_space_matrix ${catkin_EXPORTED_TARGETS})
-target_link_libraries(test_state_space_matrix
-                      ${catkin_LIBRARIES}
-                      ${Eigen_LIBRARIES}
-)
-
-
-# add_executable(        test_controllers src/test_pid.cpp)
-# add_dependencies(      test_controllers ${catkin_EXPORTED_TARGETS})
-# target_link_libraries( test_controllers
-# #                       ${PROJECT_NAME}
-#                       ${catkin_LIBRARIES}
-#                       ${Eigen_LIBRARIES}
-#)
 
 # Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/
@@ -64,13 +49,25 @@ if(CATKIN_ENABLE_TESTING)
 
   add_rostest_gtest(test_filters test/test_filters.launch test/test_filters.cpp)
   add_dependencies(test_filters ${catkin_EXPORTED_TARGETS})
-  target_link_libraries(test_filters ${catkin_LIBRARIES} ${Eigen_LIBRARIES} ${rostest_LIBRARIES})
+  target_link_libraries(test_filters ${catkin_LIBRARIES} ${rostest_LIBRARIES} )
+  target_compile_options(test_filters PUBLIC $<$<CONFIG:Release>:-Ofast>)
+
+  add_rostest_gtest(test_state_space_matrix test/test_state_space_matrix.launch test/test_state_space_matrix.cpp)
+  add_dependencies(test_state_space_matrix ${catkin_EXPORTED_TARGETS})
+  target_link_libraries(test_state_space_matrix ${catkin_LIBRARIES} ${rostest_LIBRARIES} )
+  target_compile_options(test_state_space_matrix PUBLIC $<$<CONFIG:Release>:-Ofast>)
+
+  add_rostest_gtest(test_controllers test/test_controllers.launch test/test_pid.cpp)
+  add_dependencies(test_controllers ${catkin_EXPORTED_TARGETS})
+  target_link_libraries(test_controllers ${catkin_LIBRARIES} ${rostest_LIBRARIES} )
+  target_compile_options(test_controllers PUBLIC $<$<CONFIG:Release>:-Ofast>)
+
 
   if(ENABLE_COVERAGE_TESTING)
     set(COVERAGE_EXCLUDES "*/${PROJECT_NAME}/test*")
     add_code_coverage(
       NAME coverage_report
-      DEPENDENCIES filtered_values_test test_filters
+      DEPENDENCIES filtered_values_test test_controllers test_filters test_state_space_matrix
     )
   endif()
 endif()
